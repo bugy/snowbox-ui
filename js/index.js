@@ -12,6 +12,7 @@ function preload() {
     game.load.image('fence_tile_vertical_upper', 'assets/fence_tile_vertical_upper.png');
     game.load.image('fence_tile_vertical_middle', 'assets/fence_tile_vertical_middle.png');
     game.load.image('fence_tile_vertical_bottom', 'assets/fence_tile_vertical_bottom.png');
+    game.load.image('ice_hud', 'assets/ice_hud.png');
     game.load.spritesheet('player', 'assets/boy.png', 48, 48);
 
 
@@ -102,6 +103,11 @@ function create() {
     player.animations.add('moveTop', [2, 6, 10, 14], 12, true);
     player.animations.add('moveBottom', [0, 4, 8, 12], 12, true);
 
+    var playerHud = game.add.sprite(0, 0, 'ice_hud');
+    playerHud.scale.setTo(0.5, 0.5);
+    playerHud.centerX = playerHud.width / 2;
+    player.addChild(playerHud);
+
     cursors = game.input.keyboard.createCursorKeys();
     game.input.keyboard.onDownCallback = keyDown;
     game.input.keyboard.onUpCallback = keyUp;
@@ -190,11 +196,7 @@ function handlePlayerMove(data) {
         newY = game.world.height - player.height;
     }
 
-    var newTween = game.add.tween(player).to({x: newX, y: newY}, 20, null, true);
-    if (movementTween) {
-        movementTween.chain(newTween);
-    }
-    movementTween = newTween;
+    player.position.set(newX, newY);
 }
 
 function handleSnowballChanged(data) {
