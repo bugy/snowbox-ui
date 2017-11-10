@@ -13,12 +13,17 @@ function preload() {
     game.load.image('fence_tile_vertical_middle', 'assets/fence_tile_vertical_middle.png');
     game.load.image('fence_tile_vertical_bottom', 'assets/fence_tile_vertical_bottom.png');
     game.load.image('ice_hud', 'assets/ice_hud.png');
-    game.load.spritesheet('player', 'assets/boy.png', 48, 48);
+    game.load.spritesheet('boy', 'assets/boy.png', 48, 48);
+    game.load.spritesheet('girl', 'assets/girl.png', 48, 48);
 
+    game.load.image('dialog_9patch', 'assets/controls/panel_blue.png');
+    game.load.image('textField_9patch', 'assets/controls/buttonSquare_grey_pressed.png');
 
     var snowballBitmap = game.make.bitmapData(16, 16);
     drawGradientCircle(8, 8, 8, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', snowballBitmap);
     game.cache.addImage('snowball', null, snowballBitmap.canvas);
+
+    game.add.plugin(PhaserInput.Plugin);
 }
 
 var player;
@@ -87,7 +92,50 @@ function drawBorder(fieldWidth, fieldHeight) {
         'fence_tile_vertical_bottom');
 }
 
+function createImageButton(image) {
+    var background = game.make.sprite(0, 0, 'squareButton');
+    var sprite = game.make.sprite(0, 0, image);
+
+    var result = game.make.group();
+
+    result.add(background);
+    result.add(sprite);
+
+    background.centerX = result.width / 2;
+    background.centerY = result.height / 2;
+    sprite.centerX = background.centerX;
+    sprite.centerY = background.centerY;
+
+    return result;
+}
+
+function createTextField() {
+    var inputImage = game.make.sprite(0, 0, 'textField');
+
+    var input = game.make.inputField(0, 0, {
+        font: '18px Arial',
+        fill: '#212140',
+        fillAlpha: 0,
+        fontWeight: 'bold',
+        width: inputImage.width - 24
+    });
+
+    var result = game.make.group();
+    result.add(inputImage);
+    result.add(input);
+
+    inputImage.centerX = result.width / 2;
+    inputImage.centerY = result.height / 2;
+    input.centerX = result.width / 2;
+    input.centerY = result.height / 2;
+
+    return result;
+}
+
 function create() {
+    load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
+    load9PatchImage('textField', 'textField_9patch', 160, 40, 5, 5, 40, 40);
+    load9PatchImage('squareButton', 'textField_9patch', 48, 48, 5, 5, 40, 40);
 
     game.add.tileSprite(-1000, -1000, 4000, 4000, 'background');
 
@@ -97,7 +145,7 @@ function create() {
 
     game.physics.startSystem(Phaser.Physics.P2JS);
 
-    player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
+    player = game.add.sprite(game.world.centerX, game.world.centerY, 'girl');
     player.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
     player.animations.add('moveRight', [3, 7, 11, 15], 12, true);
     player.animations.add('moveTop', [2, 6, 10, 14], 12, true);
@@ -140,6 +188,50 @@ function create() {
         }
     });
 
+    var startGameScreen = game.add.group();
+    startGameScreen.fixedToCamera = true;
+    startGameScreen.inputEnabled = true;
+    startGameScreen.centerX = game.camera.centerX;
+    startGameScreen.centerY = game.camera.centerY;
+
+    var graphicOverlay = new Phaser.Graphics(this.game, 0, 0);
+    graphicOverlay.beginFill(0x000000, 0.7);
+    graphicOverlay.drawRect(0, 0, window.innerWidth + 50, window.innerHeight + 50);
+    graphicOverlay.endFill();
+    var overlay = this.game.add.image(-50, -50, graphicOverlay.generateTexture());
+
+    var choosePlayerDialog = game.make.sprite(0, 0, 'dialog');
+    choosePlayerDialog.centerX = graphicOverlay.width / 2;
+    choosePlayerDialog.centerY = graphicOverlay.height / 2;
+
+    var textStyle = {font: "18px Arial", fill: "#212140"};
+    var playerLabel = game.make.text(0, 0, "Nickname", textStyle);
+    playerLabel.centerX = choosePlayerDialog.centerX;
+    playerLabel.centerY = choosePlayerDialog.centerY - 120;
+
+    var nameField = createTextField(playerLabel);
+    nameField.centerX = playerLabel.centerX;
+    nameField.centerY = playerLabel.centerY + 36;
+
+    var skinLabel = game.make.text(0, 0, "Select skin", textStyle);
+    skinLabel.centerX = nameField.centerX;
+    skinLabel.centerY = nameField.centerY + 60;
+
+    var boyButton = createImageButton('boy');
+    boyButton.centerX = skinLabel.centerX - boyButton.width;
+    boyButton.centerY = skinLabel.centerY + 40;
+
+    var girlButton = createImageButton('girl');
+    girlButton.centerX = skinLabel.centerX + girlButton.width;
+    girlButton.centerY = skinLabel.centerY + 40;
+
+    startGameScreen.add(overlay);
+    startGameScreen.add(choosePlayerDialog);
+    startGameScreen.add(playerLabel);
+    startGameScreen.add(nameField);
+    startGameScreen.add(skinLabel);
+    startGameScreen.add(boyButton);
+    startGameScreen.add(girlButton);
 }
 
 function sendThrowBall() {
@@ -177,8 +269,6 @@ function keyUp(e) {
         return;
     }
 }
-
-var movementTween;
 
 function handlePlayerMove(data) {
     var newX = data.x;
@@ -275,4 +365,55 @@ function drawGradientCircle(x, y, radius, colorIn, colorOut, bitmap) {
     gradient.addColorStop(0, colorIn);
     gradient.addColorStop(1, colorOut);
     bitmap.circle(x, y, radius, gradient);
+}
+
+function load9PatchImage(destImage, srcImage, width, height, srcX1, srcY1, srcX2, srcY2) {
+    var bitmap = game.make.bitmapData(width, height);
+
+    var patchImage = game.cache.getImage(srcImage);
+
+    var bottomHeight = patchImage.height - srcY2;
+    var rightWidth = patchImage.width - srcX2;
+    var destX2 = width - rightWidth;
+    var destY2 = height - bottomHeight;
+
+    var leftUpper = new Phaser.Rectangle(0, 0, srcX1, srcY1);
+    bitmap.copyRect(patchImage, leftUpper, 0, 0);
+
+    var rightBottom = new Phaser.Rectangle(srcX2, srcY2, rightWidth, bottomHeight);
+    bitmap.copyRect(patchImage, rightBottom, destX2, destY2);
+
+    var leftBottom = new Phaser.Rectangle(0, srcY2, srcX1, bottomHeight);
+    bitmap.copyRect(patchImage, leftBottom, 0, destY2);
+
+    var rightUpper = new Phaser.Rectangle(srcX2, 0, rightWidth, srcY1);
+    bitmap.copyRect(patchImage, rightUpper, destX2, 0);
+
+    var tileWidth = srcX2 - srcX1;
+    var tileHeight = srcY2 - srcY1;
+
+    for (var x = srcX1; x < destX2; x += tileWidth) {
+        var currentWidth = Math.min(tileWidth, destX2 - x);
+
+        var upperBorder = new Phaser.Rectangle(srcX1, 0, currentWidth, srcY1);
+        bitmap.copyRect(patchImage, upperBorder, x, 0);
+
+        var bottomBorder = new Phaser.Rectangle(srcX1, srcY2, currentWidth, bottomHeight);
+        bitmap.copyRect(patchImage, bottomBorder, x, destY2);
+
+        for (var y = srcY1; y < destY2; y += tileHeight) {
+            var currentHeight = Math.min(tileHeight, destY2 - y);
+
+            var centerRect = new Phaser.Rectangle(srcX1, srcY1, currentWidth, currentHeight);
+            bitmap.copyRect(patchImage, centerRect, x, y);
+
+            var leftBorder = new Phaser.Rectangle(0, srcY1, srcX1, currentHeight);
+            bitmap.copyRect(patchImage, leftBorder, 0, y);
+
+            var rightBorder = new Phaser.Rectangle(srcX2, srcY1, rightWidth, currentHeight);
+            bitmap.copyRect(patchImage, rightBorder, destX2, y);
+        }
+    }
+
+    game.cache.addImage(destImage, null, bitmap.canvas);
 }
