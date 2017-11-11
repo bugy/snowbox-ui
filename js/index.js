@@ -39,7 +39,7 @@ function preload() {
     drawGradientCircle(8, 8, 8, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', snowballBitmap);
     game.cache.addImage('snowball', null, snowballBitmap.canvas);
 
-    game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/v2/filters/Gray.js');
+    game.load.script('disabledButtonGray', 'https://cdn.rawgit.com/photonstorm/phaser/master/v2/filters/Gray.js');
 
     game.add.plugin(PhaserInput.Plugin);
 }
@@ -49,6 +49,7 @@ var cursors;
 var snowballs;
 
 var snowballMap = new Map();
+var disabledButtonGray;
 
 socket = new WebSocket('ws://selim.co:8080/api/movement');
 
@@ -129,6 +130,8 @@ function createImageButton(image, callback) {
         callback(result, event);
     }, this);
 
+    result.key = image;
+
     return result;
 }
 
@@ -182,6 +185,8 @@ function create() {
     load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
     load9PatchImage('textField', 'textField_9patch', 160, 40, 5, 5, 40, 40);
     load9PatchImage('squareButton', 'textField_9patch', 48, 48, 5, 5, 40, 40);
+    disabledButtonGray = game.add.filter('Gray');
+
 
     game.add.tileSprite(-1000, -1000, 4000, 4000, 'background');
 
@@ -290,20 +295,20 @@ function createStartDialog() {
     girlButton.filters = [skinButtonsGray];
     boyButton.filters = [skinButtonsGray];
 
-    buttons = [boyButton, girlButton];
+    buttons.push(boyButton);
+    buttons.push(girlButton);
 
-    var startButton = createButton(textStyle, function (button) {
-        console.log(startButton.input.enabled);
-        button.input.enabled = false;
+    var startButton = createButton(textStyle, function () {
+        setButtonEnabled(startButton, false);
+
         sendStartGame();
     });
     startButton.centerX = choosePlayerDialog.centerX;
     startButton.bottom = choosePlayerDialog.bottom - 24;
 
-    selectedSkin.subscribe(function (newValue) {
-        console.log(newValue);
+    selectedSkin.subscribe(function () {
         if (selectedSkin()) {
-            startButton.filters = null;
+            setButtonEnabled(startButton, true);
         }
     });
 
@@ -316,9 +321,33 @@ function createStartDialog() {
     startGameScreen.add(girlButton);
     startGameScreen.add(startButton);
 
-    startButton.input.enabled = false;
-    var gray = game.add.filter('Gray');
-    startButton.filters = [gray];
+    setButtonEnabled(startButton, false);
+}
+
+function setButtonEnabled(button, enabled) {
+    button.input.enabled = enabled;
+
+    if (enabled === true) {
+        if (button.filters) {
+            var index = button.filters.indexOf(disabledButtonGray);
+            if(index >-1) {
+                button.filters.splice(index, 1);
+            }
+
+            if (button.filters.length === 0) {
+                button.filters = null;
+            }
+        } else {
+            button.filters = null;
+        }
+
+    } else {
+        if (button.filters) {
+            button.filters.push(disabledButtonGray);
+        } else {
+            button.filters = [disabledButtonGray];
+        }
+    }
 }
 
 function sendStartGame() {
