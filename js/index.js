@@ -1,4 +1,19 @@
-var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.CANVAS, 'Snowbox', {
+Phaser.Sprite.prototype.alignInParent = function (position, offsetX, offsetY) {
+    if (this.parent.name === "__world") {
+        return;
+    }
+
+    var s = this.parent.scale;
+    this.parent.scale.setTo(1);
+    this.alignIn(this.parent, position, offsetX, offsetY);
+
+    this.left -= this.parent.left + (this.parent.width * this.parent.anchor.x);
+    this.top -= this.parent.top + (this.parent.height * this.parent.anchor.y);
+
+    this.parent.scale = s;
+};
+
+var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 'Snowbox', {
     preload: preload,
     create: create,
     update: update,
@@ -18,10 +33,13 @@ function preload() {
 
     game.load.image('dialog_9patch', 'assets/controls/panel_blue.png');
     game.load.image('textField_9patch', 'assets/controls/buttonSquare_grey_pressed.png');
+    game.load.atlasXML('rpg_ui', 'assets/controls/uipack_rpg_sheet.png', 'assets/controls/uipack_rpg_sheet.xml');
 
     var snowballBitmap = game.make.bitmapData(16, 16);
     drawGradientCircle(8, 8, 8, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', snowballBitmap);
     game.cache.addImage('snowball', null, snowballBitmap.canvas);
+
+    game.load.script('gray', 'https://cdn.rawgit.com/photonstorm/phaser/master/v2/filters/Gray.js');
 
     game.add.plugin(PhaserInput.Plugin);
 }
@@ -92,7 +110,7 @@ function drawBorder(fieldWidth, fieldHeight) {
         'fence_tile_vertical_bottom');
 }
 
-function createImageButton(image) {
+function createImageButton(image, callback) {
     var background = game.make.sprite(0, 0, 'squareButton');
     var sprite = game.make.sprite(0, 0, image);
 
@@ -105,6 +123,11 @@ function createImageButton(image) {
     background.centerY = result.height / 2;
     sprite.centerX = background.centerX;
     sprite.centerY = background.centerY;
+
+    background.inputEnabled = true;
+    background.events.onInputDown.add(function (source, event) {
+        callback(result, event);
+    }, this);
 
     return result;
 }
@@ -130,6 +153,29 @@ function createTextField() {
     input.centerY = result.height / 2;
 
     return result;
+}
+
+function createButton(textStyle, callback) {
+    var button = game.make.button(0, 0, 'rpg_ui', callback, this,
+        'buttonLong_brown.png', 'buttonLong_brown.png', 'buttonLong_brown_pressed.png');
+    button.anchor.setTo(0, 1);
+
+    var buttonLabel = game.make.text(0, 0, "Start", textStyle);
+    button.addChild(buttonLabel);
+    var repositionLabel = function (mouseUp) {
+        if (mouseUp === true) {
+            buttonLabel.alignInParent(Phaser.TOP_CENTER, 0, -10);
+        } else {
+            buttonLabel.alignInParent(Phaser.TOP_CENTER, 0, -14);
+        }
+    };
+    button.onInputDown.add(repositionLabel);
+    button.onInputUp.add(function () {
+        repositionLabel(true);
+    });
+    repositionLabel();
+
+    return button;
 }
 
 function create() {
@@ -188,6 +234,10 @@ function create() {
         }
     });
 
+    // createStartDialog();
+}
+
+function createStartDialog() {
     var startGameScreen = game.add.group();
     startGameScreen.fixedToCamera = true;
     startGameScreen.inputEnabled = true;
@@ -210,20 +260,52 @@ function create() {
     playerLabel.centerY = choosePlayerDialog.centerY - 120;
 
     var nameField = createTextField(playerLabel);
-    nameField.centerX = playerLabel.centerX;
+    nameField.centerX = choosePlayerDialog.centerX;
     nameField.centerY = playerLabel.centerY + 36;
 
     var skinLabel = game.make.text(0, 0, "Select skin", textStyle);
-    skinLabel.centerX = nameField.centerX;
+    skinLabel.centerX = choosePlayerDialog.centerX;
     skinLabel.centerY = nameField.centerY + 60;
 
-    var boyButton = createImageButton('boy');
-    boyButton.centerX = skinLabel.centerX - boyButton.width;
+    var buttons = [];
+    var selectedSkin = ko.observable(null);
+    var skinSelector = function (source) {
+        buttons.forEach(function (value) {
+            value.filters = [skinButtonsGray];
+        });
+
+        source.filters = null;
+        selectedSkin(source.key);
+    };
+
+    var boyButton = createImageButton('boy', skinSelector);
+    boyButton.centerX = choosePlayerDialog.centerX - boyButton.width;
     boyButton.centerY = skinLabel.centerY + 40;
 
-    var girlButton = createImageButton('girl');
-    girlButton.centerX = skinLabel.centerX + girlButton.width;
+    var girlButton = createImageButton('girl', skinSelector);
+    girlButton.centerX = choosePlayerDialog.centerX + girlButton.width;
     girlButton.centerY = skinLabel.centerY + 40;
+
+    var skinButtonsGray = game.add.filter('Gray');
+    girlButton.filters = [skinButtonsGray];
+    boyButton.filters = [skinButtonsGray];
+
+    buttons = [boyButton, girlButton];
+
+    var startButton = createButton(textStyle, function (button) {
+        console.log(startButton.input.enabled);
+        button.input.enabled = false;
+        sendStartGame();
+    });
+    startButton.centerX = choosePlayerDialog.centerX;
+    startButton.bottom = choosePlayerDialog.bottom - 24;
+
+    selectedSkin.subscribe(function (newValue) {
+        console.log(newValue);
+        if (selectedSkin()) {
+            startButton.filters = null;
+        }
+    });
 
     startGameScreen.add(overlay);
     startGameScreen.add(choosePlayerDialog);
@@ -232,13 +314,26 @@ function create() {
     startGameScreen.add(skinLabel);
     startGameScreen.add(boyButton);
     startGameScreen.add(girlButton);
+    startGameScreen.add(startButton);
+
+    startButton.input.enabled = false;
+    var gray = game.add.filter('Gray');
+    startButton.filters = [gray];
+}
+
+function sendStartGame() {
+    socket.send(JSON.stringify({
+        'type': 'connectToGame',
+        'playerName': 'testPlayer',
+        'skin': 'boy'
+    }));
 }
 
 function sendThrowBall() {
     socket.send(JSON.stringify({
         "type": 'throwBall',
-        "pointerX": game.input.mousePointer.x,
-        "pointerY": game.input.mousePointer.y
+        "pointerX": game.input.mousePointer.x + game.camera.x,
+        "pointerY": game.input.mousePointer.y + game.camera.y
     }));
 }
 
@@ -299,11 +394,12 @@ function handleSnowballChanged(data) {
 
     if (data.deleted) {
         snowball.kill();
-        snowballMap.remove(data.id);
+        snowballMap.delete(data.id);
         return;
     }
 
     snowball.reset(data.x, data.y);
+    game.physics.arcade.velocityFromRotation(data.angle, data.velocity * 8.9, snowball.body.velocity);
 }
 
 function sendPlayerMove() {
@@ -357,7 +453,11 @@ function update() {
 }
 
 function render() {
-
+    /*   var i = 0;
+        snowballMap.forEach(function (value, key) {
+            game.debug.bodyInfo(value, 32, 32 + i * 112);
+            i++;
+        });*/
 }
 
 function drawGradientCircle(x, y, radius, colorIn, colorOut, bitmap) {
