@@ -75,7 +75,7 @@ function handleGameStarted(data) {
         fill: "#0000D0"
     });
     player.addChild(nameLabel);
-    nameLabel.centerX = player.width / 2;
+    nameLabel.x = Math.round((player.width - nameLabel.width) / 2);
     nameLabel.y = -12;
 
     cursors = game.input.keyboard.createCursorKeys();
