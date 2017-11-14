@@ -14,6 +14,8 @@ function connectToServer() {
     socket.onerror = function (evt) {
         mockServer = true;
         socket = null;
+
+        mockEnemies();
     };
 }
 
@@ -31,7 +33,10 @@ function dispatchMessage(message) {
         return;
     } else if (message.type === 'gameStarted') {
         handleGameStarted(message);
-        return
+        return;
+    } else if (message.type === 'enemyConnected') {
+        handleEnemyConnected(message);
+        return;
     }
 }
 
@@ -167,4 +172,20 @@ function sendPlayerMove(xDirection, yDirection) {
             }
         }, 20);
     }
+}
+
+function mockEnemies() {
+    setTimeout(function () {
+        var enemyNames = ['Garry', 'Boogeyman', 'Ki113R'];
+
+        enemyNames.forEach(function (name) {
+            dispatchMessage({
+                'type': 'enemyConnected',
+                'x': Math.round(Math.random() * game.world.width),
+                'y': Math.round(Math.random() * game.world.height),
+                'skin': Math.random() < 0.5 ? 'boy' : 'girl',
+                'name': name
+            })
+        });
+    }, 2000);
 }

@@ -57,29 +57,39 @@ function create() {
     sendStartGame('buggy', Math.random() < 0.5 ? 'boy' : 'girl');
 }
 
+function createPlayerSprite(x, y, name, skin, labelColor) {
+    var sprite = game.add.sprite(x, y, skin);
+    sprite.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
+    sprite.animations.add('moveRight', [3, 7, 11, 15], 12, true);
+    sprite.animations.add('moveTop', [2, 6, 10, 14], 12, true);
+    sprite.animations.add('moveBottom', [0, 4, 8, 12], 12, true);
+
+    game.physics.enable(sprite, Phaser.Physics.ARCADE);
+    sprite.body.collideWorldBounds = true;
+
+    var nameLabel = game.make.text(0, 0, name, {
+        font: "14px Arial",
+        fill: labelColor
+    });
+    sprite.addChild(nameLabel);
+    nameLabel.x = Math.round((sprite.width - nameLabel.width) / 2);
+    nameLabel.y = -12;
+
+    return sprite;
+}
+
 function handleGameStarted(data) {
     game.world.setBounds(0, 0, data.width, data.height);
 
     drawBorder(data.width, data.height);
 
     game.physics.startSystem(Phaser.Physics.P2JS);
-
-    player = game.add.sprite(game.world.centerX, game.world.centerY, data.skin);
-    player.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
-    player.animations.add('moveRight', [3, 7, 11, 15], 12, true);
-    player.animations.add('moveTop', [2, 6, 10, 14], 12, true);
-    player.animations.add('moveBottom', [0, 4, 8, 12], 12, true);
-
-    game.physics.enable(player, Phaser.Physics.ARCADE);
-    player.body.collideWorldBounds = true;
-
-    var nameLabel = game.add.text(0, 0, data.playerName, {
-        font: "14px Arial",
-        fill: "#0000D0"
-    });
-    player.addChild(nameLabel);
-    nameLabel.x = Math.round((player.width - nameLabel.width) / 2);
-    nameLabel.y = -12;
+    player = createPlayerSprite(
+        game.world.centerX,
+        game.world.centerY,
+        data.playerName,
+        data.skin,
+        '#0000d0');
 
     cursors = game.input.keyboard.createCursorKeys();
     game.input.keyboard.onDownCallback = keyDown;
@@ -182,6 +192,10 @@ function handlePlayerMove(data) {
 function handlePlayerStopped(data) {
     player.body.velocity.setTo(0, 0);
     player.reset(data.x, data.y);
+}
+
+function handleEnemyConnected(data) {
+    createPlayerSprite(data.x, data.y, data.name, data.skin, '#d00000');
 }
 
 function handleSnowballChanged(data) {
