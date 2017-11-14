@@ -70,6 +70,9 @@ function handleGameStarted(data) {
     player.animations.add('moveTop', [2, 6, 10, 14], 12, true);
     player.animations.add('moveBottom', [0, 4, 8, 12], 12, true);
 
+    game.physics.enable(player, Phaser.Physics.ARCADE);
+    player.body.collideWorldBounds = true;
+
     var nameLabel = game.add.text(0, 0, data.playerName, {
         font: "14px Arial",
         fill: "#0000D0"
@@ -171,22 +174,14 @@ function moveKeyPressed() {
 }
 
 function handlePlayerMove(data) {
-    var newX = data.x;
-    var newY = data.y;
+    player.reset(data.x, data.y);
+    game.physics.arcade.velocityFromRotation(
+        data.angle, data.velocity * 9, player.body.velocity);
+}
 
-    if (newX < 0) {
-        newX = 0;
-    } else if (newX > (game.world.width - player.width)) {
-        newX = game.world.width - player.width;
-    }
-
-    if (newY < 0) {
-        newY = 0;
-    } else if (newY > (game.world.height - player.height)) {
-        newY = game.world.height - player.height;
-    }
-
-    player.position.set(newX, newY);
+function handlePlayerStopped(data) {
+    player.body.velocity.setTo(0, 0);
+    player.reset(data.x, data.y);
 }
 
 function handleSnowballChanged(data) {
@@ -204,7 +199,7 @@ function handleSnowballChanged(data) {
     }
 
     snowball.reset(data.x, data.y);
-    game.physics.arcade.velocityFromRotation(data.angle, data.velocity * 8.9, snowball.body.velocity);
+    game.physics.arcade.velocityFromRotation(data.angle, data.velocity * 9, snowball.body.velocity);
 }
 
 function update() {
