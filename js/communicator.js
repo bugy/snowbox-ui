@@ -12,18 +12,22 @@ function connectToServer() {
     });
 
     socket.onerror = function (evt) {
-        mockServer = true;
-        socket = null;
-
-        mockEnemies();
+        startMock();
     };
+}
+
+function startMock() {
+    mockServer = true;
+    socket = null;
+
+    mockEnemies();
 }
 
 function dispatchMessage(message) {
     console.log('message=', message);
 
     if (message.type === 'playerMoved') {
-        handlePlayerMove(message);
+        handlePlayerMoved(message);
         return;
     } else if (message.type === 'playerStopped') {
         handlePlayerStopped(message);
@@ -36,6 +40,15 @@ function dispatchMessage(message) {
         return;
     } else if (message.type === 'enemyConnected') {
         handleEnemyConnected(message);
+        return;
+    } else if (message.type === 'enemyDisconnected') {
+        handleEnemyDisconnected(message);
+        return;
+    } else if (message.type === 'enemyMoved') {
+        handleEnemyMoved(message);
+        return;
+    } else if (message.type === 'enemyStopped') {
+        handleEnemyStopped(message);
         return;
     }
 }
@@ -113,7 +126,7 @@ function sendPlayerMove(xDirection, yDirection) {
             return;
         }
 
-        var angle = Phaser.Math.angleBetween(0, 0, xDirection, yDirection);
+        var angle = directionsToAngle(xDirection, yDirection);
         var deltaX = Math.cos(angle) * 2;
         var deltaY = Math.sin(angle) * 2;
 
@@ -159,7 +172,7 @@ function sendPlayerMove(xDirection, yDirection) {
                     movementTimer = null;
 
                 } else {
-                    var angle = Phaser.Math.angleBetween(0, 0, newDirectionX, newDirectionY);
+                    var angle = directionsToAngle(newDirectionX, newDirectionY);
 
                     dispatchMessage({
                         'type': 'playerMoved',
@@ -176,16 +189,92 @@ function sendPlayerMove(xDirection, yDirection) {
 
 function mockEnemies() {
     setTimeout(function () {
-        var enemyNames = ['Garry', 'Boogeyman', 'Ki113R'];
-
-        enemyNames.forEach(function (name) {
-            dispatchMessage({
-                'type': 'enemyConnected',
-                'x': Math.round(Math.random() * game.world.width),
-                'y': Math.round(Math.random() * game.world.height),
-                'skin': Math.random() < 0.5 ? 'boy' : 'girl',
-                'name': name
-            })
-        });
+        for (i = 0; i < 3; i++) {
+            startEnemyLoop();
+        }
     }, 2000);
+}
+
+function startEnemyLoop() {
+    var enemyNames = ['Garry', 'Boogeyman', 'Ki113R', 'snowman', 'Destroyer', '111111'];
+    var skins = ['boy', 'girl'];
+
+    var skin = randomElement(skins);
+    var id = Math.random();
+    var name = randomElement(enemyNames);
+
+    dispatchMessage({
+        'type': 'enemyConnected',
+        'id': id,
+        'x': randomInt(game.world.width - player.width),
+        'y': randomInt(game.world.height - player.height),
+        'skin': skin,
+        'name': name
+    });
+
+    var connected = true;
+
+    setInterval(function () {
+        var rnd = Math.random();
+
+        if (rnd < 0.0005) {
+            connected = !connected;
+
+            if (connected) {
+                skin = randomElement(skins);
+                id = Math.random();
+                name = randomElement(enemyNames);
+
+                dispatchMessage({
+                    'type': 'enemyConnected',
+                    'id': id,
+                    'x': randomInt(game.world.width - player.width),
+                    'y': randomInt(game.world.height - player.height),
+                    'skin': skin,
+                    'name': name
+                });
+            } else {
+                dispatchMessage({
+                    'type': 'enemyDisconnected',
+                    'id': id
+                });
+            }
+        } else if ((rnd < 0.1) && (connected)) {
+            var xDirection = randomInt(3) - 1;
+            var yDirection = randomInt(3) - 1;
+
+            if ((xDirection === 0) && (yDirection === 0)) {
+                dispatchMessage({
+                    'type': 'enemyStopped',
+                    'id': id,
+                    'x': enemiesMap.get(id).x,
+                    'y': enemiesMap.get(id).y
+                });
+            } else {
+                var angle = directionsToAngle(xDirection, yDirection);
+
+                dispatchMessage({
+                    'type': 'enemyMoved',
+                    'id': id,
+                    'x': enemiesMap.get(id).x,
+                    'y': enemiesMap.get(id).y,
+                    'angle': angle,
+                    'velocity': 15
+                });
+            }
+        }
+    }, 100);
+}
+
+function randomInt(max) {
+    return Math.floor(Math.random() * max);
+}
+
+function randomElement(arr) {
+    var index = randomInt(arr.length);
+    return arr[index];
+}
+
+function directionsToAngle(directionX, directionY) {
+    return Phaser.Math.angleBetween(0, 0, directionX, directionY);
 }

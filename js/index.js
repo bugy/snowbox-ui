@@ -41,6 +41,7 @@ var cursors;
 var snowballs;
 
 var snowballMap = new Map();
+var enemiesMap = new Map();
 
 function create() {
     load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
@@ -75,6 +76,8 @@ function createPlayerSprite(x, y, name, skin, labelColor) {
     nameLabel.x = Math.round((sprite.width - nameLabel.width) / 2);
     nameLabel.y = -12;
 
+    sprite.physicsBodyType = Phaser.Physics.ARCADE;
+
     return sprite;
 }
 
@@ -83,7 +86,8 @@ function handleGameStarted(data) {
 
     drawBorder(data.width, data.height);
 
-    game.physics.startSystem(Phaser.Physics.P2JS);
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
     player = createPlayerSprite(
         game.world.centerX,
         game.world.centerY,
@@ -183,19 +187,51 @@ function moveKeyPressed() {
     }
 }
 
-function handlePlayerMove(data) {
-    player.reset(data.x, data.y);
+function startSpriteMovement(sprite, x, y, velocity, angle) {
+    sprite.reset(x, y);
     game.physics.arcade.velocityFromRotation(
-        data.angle, data.velocity * 9, player.body.velocity);
+        angle, velocity * 9, sprite.body.velocity);
+}
+
+function handlePlayerMoved(data) {
+    startSpriteMovement(player, data.x, data.y, data.velocity, data.angle);
+}
+
+function stopPlayerSprite(sprite, x, y) {
+    sprite.body.velocity.setTo(0, 0);
+    sprite.reset(x, y);
 }
 
 function handlePlayerStopped(data) {
-    player.body.velocity.setTo(0, 0);
-    player.reset(data.x, data.y);
+    stopPlayerSprite(player, data.x, data.y);
 }
 
 function handleEnemyConnected(data) {
-    createPlayerSprite(data.x, data.y, data.name, data.skin, '#d00000');
+    var enemySprite = createPlayerSprite(data.x, data.y, data.name, data.skin, '#d00000');
+    enemiesMap.set(data.id, enemySprite);
+}
+
+function handleEnemyDisconnected(data) {
+    var enemySprite = enemiesMap.get(data.id);
+    if (enemySprite) {
+        enemySprite.destroy();
+    }
+
+    enemiesMap.delete(data.id);
+}
+
+function handleEnemyStopped(data) {
+    var enemySprite = enemiesMap.get(data.id);
+    if (enemySprite) {
+        stopPlayerSprite(enemySprite, data.x, data.y);
+    }
+}
+
+function handleEnemyMoved(data) {
+    var enemySprite = enemiesMap.get(data.id);
+    if (enemySprite) {
+        startSpriteMovement(enemySprite, data.x, data.y, data.velocity, data.angle);
+    }
 }
 
 function handleSnowballChanged(data) {
@@ -217,6 +253,18 @@ function handleSnowballChanged(data) {
 }
 
 function update() {
+
+    snowballMap.forEach(function (snowballSprite) {
+        game.physics.arcade.collide(player, snowballSprite);
+    });
+
+    enemiesMap.forEach(function (enemy) {
+        game.physics.arcade.collide(player, enemy);
+
+        snowballMap.forEach(function (snowballSprite) {
+            game.physics.arcade.collide(enemy, snowballSprite);
+        });
+    });
 }
 
 function render() {
