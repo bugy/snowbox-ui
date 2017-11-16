@@ -94,3 +94,7 @@ function load9PatchImage(destImage, srcImage, width, height, srcX1, srcY1, srcX2
 
     game.cache.addImage(destImage, null, bitmap.canvas);
 }
+
+function directionsToAngle(directionX, directionY) {
+    return Phaser.Math.angleBetween(0, 0, directionX, directionY);
+}

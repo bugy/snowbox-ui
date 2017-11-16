@@ -39,6 +39,7 @@ function preload() {
 var player;
 var cursors;
 var snowballs;
+var playerId;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
@@ -77,11 +78,19 @@ function createPlayerSprite(x, y, name, skin, labelColor) {
     nameLabel.y = -12;
 
     sprite.physicsBodyType = Phaser.Physics.ARCADE;
+    sprite.body.bounce.set(0, 0);
+    var bodyRadius = 12;
+    sprite.body.setCircle(
+        bodyRadius,
+        (sprite.width / 2 - bodyRadius),
+        (sprite.height / 2 - bodyRadius));
 
     return sprite;
 }
 
 function handleGameStarted(data) {
+    playerId = data.id;
+
     game.world.setBounds(0, 0, data.width, data.height);
 
     drawBorder(data.width, data.height);
@@ -194,7 +203,16 @@ function startSpriteMovement(sprite, x, y, velocity, angle) {
 }
 
 function handlePlayerMoved(data) {
-    startSpriteMovement(player, data.x, data.y, data.velocity, data.angle);
+    var sprite = null;
+    if (data.id === playerId) {
+        sprite = player;
+    } else {
+        sprite = enemiesMap.get(data.id);
+    }
+
+    if (sprite) {
+        startSpriteMovement(sprite, data.x, data.y, data.velocity, data.angle);
+    }
 }
 
 function stopPlayerSprite(sprite, x, y) {
@@ -203,7 +221,16 @@ function stopPlayerSprite(sprite, x, y) {
 }
 
 function handlePlayerStopped(data) {
-    stopPlayerSprite(player, data.x, data.y);
+    var sprite = null;
+    if (data.id === playerId) {
+        sprite = player;
+    } else {
+        sprite = enemiesMap.get(data.id);
+    }
+
+    if (sprite) {
+        stopPlayerSprite(sprite, data.x, data.y);
+    }
 }
 
 function handleEnemyConnected(data) {
@@ -218,20 +245,6 @@ function handleEnemyDisconnected(data) {
     }
 
     enemiesMap.delete(data.id);
-}
-
-function handleEnemyStopped(data) {
-    var enemySprite = enemiesMap.get(data.id);
-    if (enemySprite) {
-        stopPlayerSprite(enemySprite, data.x, data.y);
-    }
-}
-
-function handleEnemyMoved(data) {
-    var enemySprite = enemiesMap.get(data.id);
-    if (enemySprite) {
-        startSpriteMovement(enemySprite, data.x, data.y, data.velocity, data.angle);
-    }
 }
 
 function handleSnowballChanged(data) {
@@ -253,18 +266,9 @@ function handleSnowballChanged(data) {
 }
 
 function update() {
-
-    snowballMap.forEach(function (snowballSprite) {
-        game.physics.arcade.collide(player, snowballSprite);
-    });
-
-    enemiesMap.forEach(function (enemy) {
-        game.physics.arcade.collide(player, enemy);
-
-        snowballMap.forEach(function (snowballSprite) {
-            game.physics.arcade.collide(enemy, snowballSprite);
-        });
-    });
+    if (mockServer) {
+        updateMock();
+    }
 }
 
 function render() {
@@ -272,5 +276,17 @@ function render() {
         snowballMap.forEach(function (value, key) {
             game.debug.bodyInfo(value, 32, 32 + i * 112);
             i++;
+        });*/
+
+    /*    if (player) {
+            game.debug.body(player);
+        }
+
+        enemiesMap.forEach(function (value) {
+            game.debug.body(value);
+        });
+
+        snowballMap.forEach(function (value) {
+            game.debug.body(value);
         });*/
 }
