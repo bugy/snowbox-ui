@@ -42,6 +42,12 @@ function dispatchMessage(message) {
     } else if (message.type === 'playerDisconnected') {
         handleEnemyDisconnected(message);
         return;
+    } else if (message.type === 'playerScoreChanged') {
+        handlePlayerScoreChanged(message);
+        return;
+    } else if (message.type === 'playerScored') {
+        handlePlayerScored(message);
+        return;
     }
 }
 

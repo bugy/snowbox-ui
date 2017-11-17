@@ -43,6 +43,7 @@ var playerId;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
+var scoresMap = new Map();
 
 function create() {
     load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
@@ -59,7 +60,7 @@ function create() {
     sendStartGame('buggy', Math.random() < 0.5 ? 'boy' : 'girl');
 }
 
-function createPlayerSprite(x, y, name, skin, labelColor) {
+function createPlayerSprite(id, x, y, name, skin, labelColor) {
     var sprite = game.add.sprite(x, y, skin);
     sprite.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
     sprite.animations.add('moveRight', [3, 7, 11, 15], 12, true);
@@ -85,6 +86,29 @@ function createPlayerSprite(x, y, name, skin, labelColor) {
         (sprite.width / 2 - bodyRadius),
         (sprite.height / 2 - bodyRadius));
 
+    sprite.model = {
+        id: id,
+        name: name,
+        score: ko.observable(0)
+    };
+
+    var scoreLabel = game.add.text(0, 16, name + ': ' + sprite.model.score(), {
+        font: "18px Arial",
+        fill: labelColor,
+        stroke: '#000000',
+        strokeThickness: 1
+    });
+    scoreLabel.x = 16;
+    scoreLabel.fixedToCamera = true;
+    scoresMap.set(id, scoreLabel);
+    refreshScoreList(sprite);
+
+    sprite.model.score.subscribe(function () {
+        scoreLabel.text = name + ': ' + sprite.model.score();
+
+        refreshScoreList();
+    });
+
     return sprite;
 }
 
@@ -98,6 +122,7 @@ function handleGameStarted(data) {
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     player = createPlayerSprite(
+        data.id,
         game.world.centerX,
         game.world.centerY,
         data.playerName,
@@ -203,12 +228,7 @@ function startSpriteMovement(sprite, x, y, velocity, angle) {
 }
 
 function handlePlayerMoved(data) {
-    var sprite = null;
-    if (data.id === playerId) {
-        sprite = player;
-    } else {
-        sprite = enemiesMap.get(data.id);
-    }
+    var sprite = getPlayer(data.id);
 
     if (sprite) {
         startSpriteMovement(sprite, data.x, data.y, data.velocity, data.angle);
@@ -220,13 +240,16 @@ function stopPlayerSprite(sprite, x, y) {
     sprite.reset(x, y);
 }
 
-function handlePlayerStopped(data) {
-    var sprite = null;
-    if (data.id === playerId) {
-        sprite = player;
+function getPlayer(id) {
+    if (id === playerId) {
+        return player;
     } else {
-        sprite = enemiesMap.get(data.id);
+        return enemiesMap.get(id);
     }
+}
+
+function handlePlayerStopped(data) {
+    var sprite = getPlayer(data.id);
 
     if (sprite) {
         stopPlayerSprite(sprite, data.x, data.y);
@@ -234,7 +257,7 @@ function handlePlayerStopped(data) {
 }
 
 function handleEnemyConnected(data) {
-    var enemySprite = createPlayerSprite(data.x, data.y, data.name, data.skin, '#d00000');
+    var enemySprite = createPlayerSprite(data.id, data.x, data.y, data.name, data.skin, '#d00000');
     enemiesMap.set(data.id, enemySprite);
 }
 
@@ -245,6 +268,8 @@ function handleEnemyDisconnected(data) {
     }
 
     enemiesMap.delete(data.id);
+    scoresMap.delete(data.id);
+    refreshScoreList();
 }
 
 function handleSnowballChanged(data) {
@@ -263,6 +288,64 @@ function handleSnowballChanged(data) {
 
     snowball.reset(data.x, data.y);
     game.physics.arcade.velocityFromRotation(data.angle, data.velocity * 9, snowball.body.velocity);
+}
+
+function handlePlayerScoreChanged(data) {
+    var player = getPlayer(data.playerId);
+    if (!player) {
+        return;
+    }
+
+    player.model.score(data.newScore);
+}
+
+function handlePlayerScored(data) {
+    var player = getPlayer(data.playerId);
+    if (!player) {
+        return;
+    }
+
+    var deltaText = data.delta > 0 ? '+' + data.delta : data.delta;
+
+    var deltaLabel = game.add.text(0, 0, deltaText, {
+        font: '16px Arial',
+        fontWeight: 'bold',
+        fill: (data.delta > 0) ? '#00A000' : '#C00000',
+        stroke: '#404040',
+        strokeThickness: 1
+    });
+
+    deltaLabel.centerX = player.centerX;
+    deltaLabel.centerY = player.centerY + 16;
+
+    var labelTween = this.game.add.tween(deltaLabel).to({
+        y: deltaLabel.y + 48
+    }, 1500, Phaser.Easing.Quadratic.Out, true);
+    labelTween.onComplete.add(function () {
+        this.destroy();
+    }, deltaLabel);
+}
+
+function refreshScoreList(newPlayer) {
+    var sortedPlayers = Array.from(enemiesMap.values());
+    if (player) {
+        sortedPlayers.push(player);
+    }
+    if (newPlayer) {
+        sortedPlayers.push(newPlayer);
+    }
+
+    sortedPlayers.sort(function (a, b) {
+        return b.model.score() - a.model.score();
+    });
+
+    var y = 16;
+    sortedPlayers.forEach(function (value) {
+        var label = scoresMap.get(value.model.id);
+        label.cameraOffset.y = y;
+
+        y += label.height + 8;
+    });
 }
 
 function update() {

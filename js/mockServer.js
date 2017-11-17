@@ -229,7 +229,7 @@ function updateMock() {
     });
 }
 
-function mockSnowballHit(playerSprite, snowball) {
+function mockSnowballHit(targetPlayer, snowball) {
     var snowballId = null;
     snowballMap.forEach(function (value, id) {
         if (snowball === value) {
@@ -241,12 +241,44 @@ function mockSnowballHit(playerSprite, snowball) {
         return;
     }
 
+    var ownerId = mockedSnowballs.get(snowballId).owner;
+    var targetId = targetPlayer.model.id;
+    var scoreDelta = 10;
+
     dispatchMessage({
         'type': 'snowballChanged',
         'id': snowballId,
-        'x': playerSprite.centerX,
-        'y': playerSprite.centerY,
+        'x': targetPlayer.centerX,
+        'y': targetPlayer.centerY,
         'deleted': true
+    });
+
+    dispatchMessage({
+        'type': 'playerScoreChanged',
+        'playerId': ownerId,
+        'newScore': getPlayer(ownerId).model.score() + scoreDelta
+    });
+
+    dispatchMessage({
+        'type': 'playerScoreChanged',
+        'playerId': targetId,
+        'newScore': targetPlayer.model.score() - scoreDelta
+    });
+
+    if ((ownerId !== playerId) && (targetId !== playerId)) {
+        return;
+    }
+
+    dispatchMessage({
+        'type': 'playerScored',
+        'playerId': ownerId,
+        'delta': scoreDelta
+    });
+
+    dispatchMessage({
+        'type': 'playerScored',
+        'playerId': targetId,
+        'delta': -scoreDelta
     });
 }
 
