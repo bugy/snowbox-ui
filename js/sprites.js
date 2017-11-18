@@ -8,6 +8,10 @@ function sprites_preload() {
         'assets/controls/uipack_rpg_sheet.png',
         'assets/controls/uipack_rpg_sheet.xml');
 
+    game.load.atlasJSONArray('snowball_splash',
+        'assets/bluespark/bluespark_gray.png',
+        'assets/bluespark/bluespark.json');
+
     var snowballBitmap = game.make.bitmapData(16, 16);
     drawGradientCircle(8, 8, 8, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', snowballBitmap);
     game.cache.addImage('snowball', null, snowballBitmap.canvas);

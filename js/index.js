@@ -150,6 +150,8 @@ function handleGameStarted(data) {
     snowballs.createMultiple(50, 'snowball');
     snowballs.setAll('checkWorldBounds', true);
     snowballs.setAll('outOfBoundsKill', true);
+    snowballs.setAll('anchor.x', 0.5);
+    snowballs.setAll('anchor.y', 0.5);
 }
 
 function keyDown(e) {
@@ -268,7 +270,9 @@ function handleEnemyDisconnected(data) {
     }
 
     enemiesMap.delete(data.id);
+    scoresMap.get(data.id).destroy();
     scoresMap.delete(data.id);
+
     refreshScoreList();
 }
 
@@ -281,13 +285,28 @@ function handleSnowballChanged(data) {
     }
 
     if (data.deleted) {
-        snowball.kill();
         snowballMap.delete(data.id);
-        return;
-    }
+        snowball.body.velocity.setTo(0, 0);
 
-    snowball.reset(data.x, data.y);
-    game.physics.arcade.velocityFromRotation(data.angle, data.velocity * 9, snowball.body.velocity);
+        snowball.loadTexture('snowball_splash');
+        snowball.scale.setTo(0.5, 0.5);
+
+        snowball.animations.add('explosion');
+        snowball.animations.play('explosion', 70, false, true);
+
+        snowball.reset(data.x, data.y);
+
+    } else {
+        if (snowball.texture.key !== 'snowball') {
+            snowball.loadTexture('snowball');
+            snowball.scale.setTo(1, 1);
+        }
+
+        snowball.reset(data.x, data.y);
+        game.physics.arcade.velocityFromRotation(
+            data.angle, data.velocity * 9, snowball.body.velocity
+        );
+    }
 }
 
 function handlePlayerScoreChanged(data) {

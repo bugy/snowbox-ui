@@ -26,6 +26,9 @@ function mockConnectToGame(message) {
     });
 
     mockEnemies();
+
+    snowballs.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', mockSnowballOutOfBounds);
+    snowballs.setAll('outOfBoundsKill', false);
 }
 
 function mockThrowBall(message) {
@@ -46,6 +49,23 @@ function mockThrowBall(message) {
         'y': player.centerY,
         'velocity': 45,
         'angle': angle
+    });
+}
+
+function mockSnowballOutOfBounds(snowball) {
+    console.log('mockSnowballOutOfBounds');
+
+    var snowballId = mockGetSnowballId(snowball);
+    if (!snowballId) {
+        return;
+    }
+
+    dispatchMessage({
+        'type': 'snowballChanged',
+        'id': snowballId,
+        'x': snowball.x,
+        'y': snowball.y,
+        'deleted': true
     });
 }
 
@@ -229,13 +249,18 @@ function updateMock() {
     });
 }
 
-function mockSnowballHit(targetPlayer, snowball) {
+function mockGetSnowballId(snowball) {
     var snowballId = null;
     snowballMap.forEach(function (value, id) {
         if (snowball === value) {
             snowballId = id;
         }
     });
+    return snowballId;
+}
+
+function mockSnowballHit(targetPlayer, snowball) {
+    var snowballId = mockGetSnowballId(snowball);
 
     if (!snowballId) {
         return;
