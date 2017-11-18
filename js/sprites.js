@@ -8,6 +8,10 @@ function sprites_preload() {
         'assets/controls/uipack_rpg_sheet.png',
         'assets/controls/uipack_rpg_sheet.xml');
 
+    game.load.atlasXML('LPC_Trees',
+        'assets/trees/LPC_Trees.png',
+        'assets/trees/LPC_Trees.xml');
+
     game.load.atlasJSONArray('snowball_splash',
         'assets/bluespark/bluespark_gray.png',
         'assets/bluespark/bluespark.json');
@@ -249,3 +253,24 @@ function createButton(textStyle, callback) {
     return button;
 }
 
+function createTree() {
+    var tree = game.add.group();
+
+    var head = game.make.sprite(0, 0, 'LPC_Trees', 'full_snow_tree_head.png');
+    var trunk = game.make.sprite(0, 0, 'LPC_Trees', 'tree_trunk.png');
+
+    tree.add(trunk);
+    tree.add(head);
+
+    trunk.centerX = tree.width / 2;
+    head.y -= 44;
+
+    tree.scale.setTo(1.5, 1.5);
+
+    game.physics.enable(trunk, Phaser.Physics.ARCADE);
+    trunk.enableBody = true;
+    trunk.body.immovable = true;
+    trunk.body.setSize(30, 40, 34, 40);
+
+    return tree;
+}

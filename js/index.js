@@ -21,6 +21,8 @@ var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 
 });
 
 function preload() {
+    game.stage.disableVisibilityChange = true;
+    game.forceSingleUpdate = true;
 
     game.load.image('background', 'assets/snow_tile.jpg');
     game.load.image('ice_hud', 'assets/ice_hud.png');
@@ -34,6 +36,8 @@ function preload() {
     helper_preload();
 
     game.add.plugin(PhaserInput.Plugin);
+    var plugin = game.plugins.add(Phaser.Plugin.AdvancedTiming);
+    plugin.mode = 'domText';
 }
 
 var player;
@@ -44,6 +48,7 @@ var playerId;
 var snowballMap = new Map();
 var enemiesMap = new Map();
 var scoresMap = new Map();
+var trees = [];
 
 function create() {
     load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
@@ -152,6 +157,22 @@ function handleGameStarted(data) {
     snowballs.setAll('outOfBoundsKill', true);
     snowballs.setAll('anchor.x', 0.5);
     snowballs.setAll('anchor.y', 0.5);
+
+    var tree1 = createTree();
+    tree1.centerX = game.world.width * 0.25;
+    tree1.centerY = game.world.height * 0.33;
+
+    var tree2 = createTree();
+    tree2.centerX = game.world.width * 0.85;
+    tree2.centerY = game.world.height * 0.5;
+
+    var tree3 = createTree();
+    tree3.centerX = game.world.width * 0.5;
+    tree3.centerY = game.world.height * 0.75;
+
+    trees.push(tree1);
+    trees.push(tree2);
+    trees.push(tree3);
 }
 
 function keyDown(e) {
@@ -367,10 +388,59 @@ function refreshScoreList(newPlayer) {
     });
 }
 
+function updatePlayerZIndex(value) {
+    var minSprite = value;
+    var maxSprite = value;
+
+    for (i = 0; i < trees.length; i++) {
+        var tree = trees[i];
+        var treeBottom = tree.bottom - 40;
+
+        if (value.bottom < treeBottom) {
+            maxSprite = tree;
+            break;
+        } else {
+            minSprite = tree;
+        }
+    }
+
+    if (value.z < minSprite.z) {
+        while (value.z < minSprite.z) {
+            value.moveUp();
+        }
+    } else if (value.z > maxSprite.z) {
+        while (value.z > maxSprite.z) {
+            value.moveDown();
+        }
+    }
+}
+
 function update() {
     if (mockServer) {
         updateMock();
     }
+
+    var players = Array.from(enemiesMap.values());
+    if (player) {
+        players.push(player);
+    }
+    players.forEach(function (playerSprite) {
+        updatePlayerZIndex(playerSprite);
+
+        trees.forEach(function (tree) {
+            game.physics.arcade.collide(playerSprite, tree);
+        });
+    });
+
+    if (!mockServer) {
+        trees.forEach(function (tree) {
+            game.physics.arcade.overlap(snowballs, tree, destroySnowballOnCollide, null, this);
+        });
+    }
+}
+
+function destroySnowballOnCollide(snowball, target) {
+    snowball.kill();
 }
 
 function render() {
@@ -391,4 +461,7 @@ function render() {
         snowballMap.forEach(function (value) {
             game.debug.body(value);
         });*/
+
+    game.debug.gameInfo(window.innerWidth - 300, 16);
+    game.debug.gameTimeInfo(window.innerWidth - 300, 160);
 }

@@ -53,8 +53,6 @@ function mockThrowBall(message) {
 }
 
 function mockSnowballOutOfBounds(snowball) {
-    console.log('mockSnowballOutOfBounds');
-
     var snowballId = mockGetSnowballId(snowball);
     if (!snowballId) {
         return;
@@ -95,8 +93,8 @@ function mockMovePlayer(message) {
     dispatchMessage({
         'type': 'playerMoved',
         'id': playerId,
-        'x': player.x + deltaX,
-        'y': player.y + deltaY,
+        'x': player.x,
+        'y': player.y,
         'angle': angle,
         'velocity': 15
     });
@@ -235,7 +233,7 @@ function updateMock() {
     snowballMap.forEach(function (snowballSprite, snowballId) {
         var snowballOwner = mockedSnowballs.get(snowballId).owner;
         if (snowballOwner !== playerId) {
-            game.physics.arcade.overlap(player, snowballSprite, mockSnowballHit, null, this);
+            game.physics.arcade.overlap(player, snowballSprite, mockSnowballHitPlayer, null, this);
         }
     });
 
@@ -243,9 +241,13 @@ function updateMock() {
         snowballMap.forEach(function (snowballSprite, snowballId) {
             var snowballOwner = mockedSnowballs.get(snowballId).owner;
             if (snowballOwner !== enemyId) {
-                game.physics.arcade.overlap(enemy, snowballSprite, mockSnowballHit, null, this);
+                game.physics.arcade.overlap(enemy, snowballSprite, mockSnowballHitPlayer, null, this);
             }
         });
+    });
+
+    trees.forEach(function (tree) {
+        game.physics.arcade.overlap(snowballs, tree, mockSnowballHitObstacle, null, this);
     });
 }
 
@@ -259,7 +261,7 @@ function mockGetSnowballId(snowball) {
     return snowballId;
 }
 
-function mockSnowballHit(targetPlayer, snowball) {
+function mockSnowballHitPlayer(targetPlayer, snowball) {
     var snowballId = mockGetSnowballId(snowball);
 
     if (!snowballId) {
@@ -304,6 +306,22 @@ function mockSnowballHit(targetPlayer, snowball) {
         'type': 'playerScored',
         'playerId': targetId,
         'delta': -scoreDelta
+    });
+}
+
+function mockSnowballHitObstacle(snowball, target) {
+    var snowballId = mockGetSnowballId(snowball);
+
+    if (!snowballId) {
+        return;
+    }
+
+    dispatchMessage({
+        'type': 'snowballChanged',
+        'id': snowballId,
+        'x': snowball.x,
+        'y': snowball.y,
+        'deleted': true
     });
 }
 
