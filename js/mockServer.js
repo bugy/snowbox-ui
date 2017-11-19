@@ -247,7 +247,7 @@ function updateMock() {
     });
 
     trees.forEach(function (tree) {
-        game.physics.arcade.overlap(snowballs, tree, mockSnowballHitObstacle, null, this);
+        game.physics.arcade.overlap(tree.trunk, snowballs, mockSnowballHitObstacle, null, this);
     });
 }
 
@@ -309,7 +309,7 @@ function mockSnowballHitPlayer(targetPlayer, snowball) {
     });
 }
 
-function mockSnowballHitObstacle(snowball, target) {
+function mockSnowballHitObstacle(target, snowball) {
     var snowballId = mockGetSnowballId(snowball);
 
     if (!snowballId) {

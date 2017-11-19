@@ -257,6 +257,10 @@ function createTree() {
     var tree = game.add.group();
 
     var head = game.make.sprite(0, 0, 'LPC_Trees', 'full_snow_tree_head.png');
+    game.physics.enable(head, Phaser.Physics.ARCADE);
+    head.body.immovable = true;
+
+
     var trunk = game.make.sprite(0, 0, 'LPC_Trees', 'tree_trunk.png');
 
     tree.add(trunk);
@@ -270,7 +274,25 @@ function createTree() {
     game.physics.enable(trunk, Phaser.Physics.ARCADE);
     trunk.enableBody = true;
     trunk.body.immovable = true;
-    trunk.body.setSize(30, 40, 34, 40);
+
+    tree.key = 'tree';
+    tree.trunk = trunk;
+    tree.head = head;
+
+    var headRadius = (head.width / 2 - 4) * tree.scale.x;
+    head.body.setCircle(
+        headRadius,
+        (head.width / 2 * tree.scale.x - headRadius),
+        (head.height / 2 * tree.scale.y - headRadius));
+
+
+    var trunkBodyWidth = 20 * tree.scale.x;
+    var trunkBodyHeight = 26 * tree.scale.y;
+    trunk.body.setSize(
+        trunkBodyWidth,
+        trunkBodyHeight,
+        Math.round((trunk.width * tree.scale.x - trunkBodyWidth) / 2),
+        28 * tree.scale.y);
 
     return tree;
 }

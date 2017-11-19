@@ -428,18 +428,30 @@ function update() {
         updatePlayerZIndex(playerSprite);
 
         trees.forEach(function (tree) {
-            game.physics.arcade.collide(playerSprite, tree);
+            game.physics.arcade.collide(playerSprite, tree.trunk);
+
+            tree.mustHide = false;
+            game.physics.arcade.overlap(tree.head, playerSprite, hideTree, null, this);
+            if (!tree.mustHide && (tree.alpha !== 1)) {
+                tree.alpha = 1;
+            }
         });
     });
 
     if (!mockServer) {
         trees.forEach(function (tree) {
-            game.physics.arcade.overlap(snowballs, tree, destroySnowballOnCollide, null, this);
+            game.physics.arcade.overlap(tree.trunk, snowballs, destroySnowballOnCollide, null, this);
         });
     }
 }
 
-function destroySnowballOnCollide(snowball, target) {
+function hideTree(treeHead, unit) {
+    var tree = treeHead.parent;
+    tree.alpha = 0.4;
+    tree.mustHide = true;
+}
+
+function destroySnowballOnCollide(target, snowball) {
     snowball.kill();
 }
 
@@ -461,6 +473,13 @@ function render() {
         snowballMap.forEach(function (value) {
             game.debug.body(value);
         });*/
+
+    /*
+        trees.forEach(function (value) {
+            game.debug.body(value.head);
+            game.debug.body(value.trunk);
+        });
+    */
 
     game.debug.gameInfo(window.innerWidth - 300, 16);
     game.debug.gameTimeInfo(window.innerWidth - 300, 160);
