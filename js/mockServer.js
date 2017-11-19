@@ -80,8 +80,8 @@ function mockMovePlayer(message) {
         dispatchMessage({
             'type': 'playerStopped',
             'id': playerId,
-            'x': player.x,
-            'y': player.y
+            'x': player.centerX,
+            'y': player.centerY
         });
         return;
     }
@@ -93,8 +93,8 @@ function mockMovePlayer(message) {
     dispatchMessage({
         'type': 'playerMoved',
         'id': playerId,
-        'x': player.x,
-        'y': player.y,
+        'x': player.centerX,
+        'y': player.centerY,
         'angle': angle,
         'velocity': 15
     });
@@ -105,20 +105,20 @@ function mockMovePlayer(message) {
     movementTimer = setInterval(function () {
         var boundedX = null;
 
-        if ((newDirectionX < 0) && (player.x <= 0)) {
-            boundedX = 0;
+        if ((newDirectionX < 0) && (player.body.x <= 0)) {
+            boundedX = player.body.width / 2;
             newDirectionX = 0;
-        } else if ((newDirectionX > 0) && (player.right >= game.world.width)) {
-            boundedX = game.world.width - player.width;
+        } else if ((newDirectionX > 0) && (player.body.right >= game.world.width)) {
+            boundedX = game.world.width - player.body.width / 2;
             newDirectionX = 0;
         }
 
         var boundedY = null;
-        if ((newDirectionY < 0) && (player.y <= 0)) {
-            boundedY = 0;
+        if ((newDirectionY < 0) && (player.body.y <= 0)) {
+            boundedY = player.body.height / 2;
             newDirectionY = 0;
-        } else if ((newDirectionY > 0) && (player.bottom >= game.world.height)) {
-            boundedY = game.world.height - player.height;
+        } else if ((newDirectionY > 0) && (player.body.bottom >= game.world.height)) {
+            boundedY = game.world.height - player.body.height / 2;
             newDirectionY = 0;
         }
 
@@ -127,8 +127,8 @@ function mockMovePlayer(message) {
                 dispatchMessage({
                     'type': 'playerStopped',
                     'id': playerId,
-                    'x': boundedX || player.x,
-                    'y': boundedY || player.y
+                    'x': boundedX || player.centerX,
+                    'y': boundedY || player.centerY
                 });
                 clearInterval(movementTimer);
                 movementTimer = null;
@@ -139,8 +139,8 @@ function mockMovePlayer(message) {
                 dispatchMessage({
                     'type': 'playerMoved',
                     'id': playerId,
-                    'x': boundedX || player.x,
-                    'y': boundedY || player.y,
+                    'x': boundedX || player.centerX,
+                    'y': boundedY || player.centerY,
                     'angle': angle,
                     'velocity': 15
                 });
@@ -210,8 +210,8 @@ function startEnemyLoop() {
                 dispatchMessage({
                     'type': 'playerStopped',
                     'id': id,
-                    'x': enemiesMap.get(id).x,
-                    'y': enemiesMap.get(id).y
+                    'x': enemiesMap.get(id).centerX,
+                    'y': enemiesMap.get(id).centerY
                 });
             } else {
                 var angle = directionsToAngle(xDirection, yDirection);
@@ -219,8 +219,8 @@ function startEnemyLoop() {
                 dispatchMessage({
                     'type': 'playerMoved',
                     'id': id,
-                    'x': enemiesMap.get(id).x,
-                    'y': enemiesMap.get(id).y,
+                    'x': enemiesMap.get(id).centerX,
+                    'y': enemiesMap.get(id).centerY,
                     'angle': angle,
                     'velocity': 15
                 });

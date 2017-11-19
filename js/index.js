@@ -255,7 +255,10 @@ function moveKeyPressed() {
 }
 
 function startSpriteMovement(sprite, x, y, velocity, angle) {
-    sprite.position.set(x, y);
+    sprite.position.set(
+        x - player.width / 2,
+        y - player.height / 2);
+
     game.physics.arcade.velocityFromRotation(
         angle, velocity * 9, sprite.body.velocity);
 }
@@ -292,7 +295,9 @@ function handlePlayerMoved(data) {
 
 function stopPlayerSprite(sprite, x, y) {
     sprite.body.velocity.setTo(0, 0);
-    sprite.position.set(x, y);
+    sprite.position.set(
+        x - player.width / 2,
+        y - player.height / 2);
 }
 
 function getPlayer(id) {
