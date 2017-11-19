@@ -173,6 +173,12 @@ function handleGameStarted(data) {
     trees.push(tree1);
     trees.push(tree2);
     trees.push(tree3);
+
+    if (data.playersInfo) {
+        data.playersInfo.forEach(function (value) {
+            handleEnemyConnected(value);
+        });
+    }
 }
 
 function keyDown(e) {
@@ -200,6 +206,18 @@ function keyUp(e) {
         || (e.keyCode === Phaser.Keyboard.RIGHT)) {
         moveKeyPressed();
         return;
+    }
+}
+
+function animatePlayerMove(sprite, animationName) {
+    if (!animationName) {
+        if (sprite.animations.currentAnim) {
+            sprite.animations.currentAnim.stop(true);
+        }
+    } else if (sprite.animations.currentAnim.name !== animationName) {
+        sprite.animations.play(animationName);
+    } else if (!sprite.animations.currentAnim.isPlaying) {
+        sprite.animations.currentAnim.play();
     }
 }
 
@@ -233,19 +251,11 @@ function moveKeyPressed() {
         animationName = "moveRight";
     }
 
-    if (!animationName) {
-        if (player.animations.currentAnim) {
-            player.animations.currentAnim.stop(true);
-        }
-    } else if (player.animations.currentAnim.name !== animationName) {
-        player.animations.play(animationName);
-    } else if (!player.animations.currentAnim.isPlaying) {
-        player.animations.currentAnim.play();
-    }
+    animatePlayerMove(player, animationName);
 }
 
 function startSpriteMovement(sprite, x, y, velocity, angle) {
-    sprite.reset(x, y);
+    sprite.position.set(x, y);
     game.physics.arcade.velocityFromRotation(
         angle, velocity * 9, sprite.body.velocity);
 }
@@ -255,12 +265,34 @@ function handlePlayerMoved(data) {
 
     if (sprite) {
         startSpriteMovement(sprite, data.x, data.y, data.velocity, data.angle);
+
+        if (sprite !== player) {
+            var animationName = null;
+
+            if (data.velocity !== 0) {
+                var angle = -((data.angle + Math.PI) % (2 * Math.PI) - Math.PI);
+                var degrees45 = Math.PI / 4;
+                var degrees135 = degrees45 * 3;
+
+                if ((angle >= degrees45) && (angle <= degrees135)) {
+                    animationName = "moveTop";
+                } else if ((angle <= -degrees45) && (angle >= -degrees135)) {
+                    animationName = "moveBottom";
+                } else if ((angle > degrees135) || (angle <= -degrees45)) {
+                    animationName = "moveLeft";
+                } else {
+                    animationName = "moveRight";
+                }
+            }
+
+            animatePlayerMove(sprite, animationName);
+        }
     }
 }
 
 function stopPlayerSprite(sprite, x, y) {
     sprite.body.velocity.setTo(0, 0);
-    sprite.reset(x, y);
+    sprite.position.set(x, y);
 }
 
 function getPlayer(id) {
@@ -276,6 +308,10 @@ function handlePlayerStopped(data) {
 
     if (sprite) {
         stopPlayerSprite(sprite, data.x, data.y);
+
+        if (sprite !== player) {
+            animatePlayerMove(sprite, null);
+        }
     }
 }
 
@@ -303,6 +339,7 @@ function handleSnowballChanged(data) {
     if (!snowball) {
         snowball = snowballs.getFirstDead();
         snowballMap.set(data.id, snowball);
+        snowball.reset(0, 0);
     }
 
     if (data.deleted) {
@@ -315,19 +352,18 @@ function handleSnowballChanged(data) {
         snowball.animations.add('explosion');
         snowball.animations.play('explosion', 70, false, true);
 
-        snowball.reset(data.x, data.y);
-
     } else {
         if (snowball.texture.key !== 'snowball') {
             snowball.loadTexture('snowball');
             snowball.scale.setTo(1, 1);
         }
 
-        snowball.reset(data.x, data.y);
         game.physics.arcade.velocityFromRotation(
             data.angle, data.velocity * 9, snowball.body.velocity
         );
     }
+
+    snowball.position.set(data.x, data.y);
 }
 
 function handlePlayerScoreChanged(data) {
@@ -345,12 +381,12 @@ function handlePlayerScored(data) {
         return;
     }
 
-    var deltaText = data.delta > 0 ? '+' + data.delta : data.delta;
+    var deltaText = data.scoreDelta > 0 ? '+' + data.scoreDelta : data.scoreDelta;
 
     var deltaLabel = game.add.text(0, 0, deltaText, {
         font: '16px Arial',
         fontWeight: 'bold',
-        fill: (data.delta > 0) ? '#00A000' : '#C00000',
+        fill: (data.scoreDelta > 0) ? '#00A000' : '#C00000',
         stroke: '#404040',
         strokeThickness: 1
     });
@@ -430,6 +466,7 @@ function update() {
         trees.forEach(function (tree) {
             game.physics.arcade.collide(playerSprite, tree.trunk);
 
+            //TODO move outside player cycle
             tree.mustHide = false;
             game.physics.arcade.overlap(tree.head, playerSprite, hideTree, null, this);
             if (!tree.mustHide && (tree.alpha !== 1)) {
@@ -456,23 +493,32 @@ function destroySnowballOnCollide(target, snowball) {
 }
 
 function render() {
+    /*    var i = 0;
+        enemiesMap.forEach(function (value, key) {
+            game.debug.bodyInfo(value, 32, 32 + i * 112);
+            i++;
+        });
+    */
+
     /*   var i = 0;
         snowballMap.forEach(function (value, key) {
             game.debug.bodyInfo(value, 32, 32 + i * 112);
             i++;
         });*/
 
-    /*    if (player) {
-            game.debug.body(player);
-        }
+    /*        if (player) {
+                game.debug.body(player);
+                game.debug.bodyInfo(player, 32, 32 + i * 112);
+            }*/
 
-        enemiesMap.forEach(function (value) {
-            game.debug.body(value);
-        });
+    /*
+            enemiesMap.forEach(function (value) {
+                game.debug.body(value);
+            });
 
-        snowballMap.forEach(function (value) {
-            game.debug.body(value);
-        });*/
+            snowballMap.forEach(function (value) {
+                game.debug.body(value);
+            });*/
 
     /*
         trees.forEach(function (value) {
