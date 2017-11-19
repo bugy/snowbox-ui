@@ -465,15 +465,26 @@ function update() {
 
         trees.forEach(function (tree) {
             game.physics.arcade.collide(playerSprite, tree.trunk);
-
-            //TODO move outside player cycle
-            tree.mustHide = false;
-            game.physics.arcade.overlap(tree.head, playerSprite, hideTree, null, this);
-            if (!tree.mustHide && (tree.alpha !== 1)) {
-                tree.alpha = 1;
-            }
         });
     });
+
+    trees.forEach(function (tree) {
+        game.physics.arcade.collide(playerSprite, tree.trunk);
+
+        tree.mustHide = false;
+        for (i = 0; i < players.length; i++) {
+            var playerSprite = players[i];
+            game.physics.arcade.overlap(tree.head, playerSprite, hideTree, null, this);
+            if (tree.mustHide) {
+                break;
+            }
+        }
+
+        if (!tree.mustHide && (tree.alpha !== 1)) {
+            tree.alpha = 1;
+        }
+    });
+
 
     if (!mockServer) {
         trees.forEach(function (tree) {
