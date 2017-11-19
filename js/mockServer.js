@@ -20,7 +20,7 @@ function mockConnectToGame(message) {
         'type': 'gameStarted',
         'id': randomId(),
         'width': 1024,
-        'height': 1024,
+        'height': 768,
         'skin': message.skin,
         'playerName': message.playerName
     });
@@ -47,7 +47,7 @@ function mockThrowBall(message) {
         'id': id,
         'x': player.centerX,
         'y': player.centerY,
-        'velocity': 45,
+        'velocity': 90,
         'angle': angle
     });
 }
@@ -299,13 +299,13 @@ function mockSnowballHitPlayer(targetPlayer, snowball) {
     dispatchMessage({
         'type': 'playerScored',
         'playerId': ownerId,
-        'delta': scoreDelta
+        'scoreDelta': scoreDelta
     });
 
     dispatchMessage({
         'type': 'playerScored',
         'playerId': targetId,
-        'delta': -scoreDelta
+        'scoreDelta': -scoreDelta
     });
 }
 
