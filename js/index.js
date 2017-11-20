@@ -22,7 +22,6 @@ var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 
 
 function preload() {
     game.stage.disableVisibilityChange = true;
-    game.forceSingleUpdate = true;
 
     game.load.image('background', 'assets/snow_tile.jpg');
     game.load.image('ice_hud', 'assets/ice_hud.png');
@@ -49,6 +48,7 @@ var snowballMap = new Map();
 var enemiesMap = new Map();
 var scoresMap = new Map();
 var trees = [];
+var movableObjects = [];
 
 function create() {
     load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
@@ -114,6 +114,9 @@ function createPlayerSprite(id, x, y, name, skin, labelColor) {
         refreshScoreList();
     });
 
+    sprite.customVelocity = new Phaser.Point(0, 0);
+    movableObjects.push(sprite);
+
     return sprite;
 }
 
@@ -157,6 +160,11 @@ function handleGameStarted(data) {
     snowballs.setAll('outOfBoundsKill', true);
     snowballs.setAll('anchor.x', 0.5);
     snowballs.setAll('anchor.y', 0.5);
+
+    snowballs.forEach(function (value) {
+        value.customVelocity = new Phaser.Point(0, 0);
+        movableObjects.push(value);
+    });
 
     var tree1 = createTree();
     tree1.centerX = game.world.width * 0.25;
@@ -256,11 +264,11 @@ function moveKeyPressed() {
 
 function startSpriteMovement(sprite, x, y, velocity, angle) {
     sprite.position.set(
-        x - player.width / 2,
-        y - player.height / 2);
+        x - sprite.width / 2,
+        y - sprite.height / 2);
 
     game.physics.arcade.velocityFromRotation(
-        angle, velocity * 9, sprite.body.velocity);
+        angle, velocity * 7.92, sprite.customVelocity);
 }
 
 function handlePlayerMoved(data) {
@@ -294,10 +302,10 @@ function handlePlayerMoved(data) {
 }
 
 function stopPlayerSprite(sprite, x, y) {
-    sprite.body.velocity.setTo(0, 0);
+    sprite.customVelocity.setTo(0, 0);
     sprite.position.set(
-        x - player.width / 2,
-        y - player.height / 2);
+        x - sprite.width / 2,
+        y - sprite.height / 2);
 }
 
 function getPlayer(id) {
@@ -349,7 +357,7 @@ function handleSnowballChanged(data) {
 
     if (data.deleted) {
         snowballMap.delete(data.id);
-        snowball.body.velocity.setTo(0, 0);
+        snowball.customVelocity.setTo(0, 0);
 
         snowball.loadTexture('snowball_splash');
         snowball.scale.setTo(0.5, 0.5);
@@ -364,7 +372,7 @@ function handleSnowballChanged(data) {
         }
 
         game.physics.arcade.velocityFromRotation(
-            data.angle, data.velocity * 9, snowball.body.velocity
+            data.angle, data.velocity * 7.92, snowball.customVelocity
         );
     }
 
@@ -456,7 +464,29 @@ function updatePlayerZIndex(value) {
     }
 }
 
+var lastTime;
+
 function update() {
+    var currentTime = new Date().getTime();
+    if (!lastTime) {
+        lastTime = currentTime - game.time.elapsed / 1000.;
+    }
+
+    var deltaTime = (currentTime - lastTime) / 1000.;
+    lastTime = currentTime;
+
+    movableObjects.forEach(function (object) {
+        var velocity = object.customVelocity;
+        if (velocity) {
+            if (velocity.x !== 0) {
+                object.body.x += velocity.x * deltaTime;
+            }
+            if (velocity.y !== 0) {
+                object.body.y += velocity.y * deltaTime;
+            }
+        }
+    });
+
     if (mockServer) {
         updateMock();
     }
@@ -545,4 +575,11 @@ function render() {
 
     game.debug.gameInfo(window.innerWidth - 300, 16);
     game.debug.gameTimeInfo(window.innerWidth - 300, 160);
+}
+
+function removeFromArray(array, element) {
+    var index = array.indexOf(element);
+    if (index > -1) {
+        array.splice(index, 1);
+    }
 }

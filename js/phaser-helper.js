@@ -14,10 +14,7 @@ function setButtonEnabled(button, enabled) {
 
     if (enabled === true) {
         if (button.filters) {
-            var index = button.filters.indexOf(disabledButtonGray);
-            if (index > -1) {
-                button.filters.splice(index, 1);
-            }
+            removeFromArray(button.filters, disabledButtonGray);
 
             if (button.filters.length === 0) {
                 button.filters = null;
