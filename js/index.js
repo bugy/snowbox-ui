@@ -61,8 +61,11 @@ function create() {
 
     connectToServer();
 
-    // createStartDialog(sendStartGame);
-    sendStartGame('buggy', Math.random() < 0.5 ? 'boy' : 'girl');
+    if (window.location.hostname === 'localhost') {
+        sendStartGame('buggy', Math.random() < 0.5 ? 'boy' : 'girl');
+    } else {
+        createStartDialog(sendStartGame);
+    }
 }
 
 function createPlayerSprite(id, x, y, name, skin, labelColor) {
