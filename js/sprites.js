@@ -253,7 +253,7 @@ function createButton(textStyle, callback) {
     return button;
 }
 
-function createTree() {
+function createTree(bodyWidth, bodyHeight) {
     var tree = game.add.group();
 
     var head = game.make.sprite(0, 0, 'LPC_Trees', 'full_snow_tree_head.png');
@@ -269,7 +269,11 @@ function createTree() {
     trunk.centerX = tree.width / 2;
     head.y -= 44;
 
-    tree.scale.setTo(1.5, 1.5);
+    var spriteBodyWidth = 20;
+    var spriteBodyHeight = 26;
+    tree.scale.setTo(
+        mathRound(bodyWidth / spriteBodyWidth, 2),
+        mathRound(bodyHeight / spriteBodyHeight, 2));
 
     game.physics.enable(trunk, Phaser.Physics.ARCADE);
     trunk.enableBody = true;
@@ -285,14 +289,11 @@ function createTree() {
         (head.width / 2 * tree.scale.x - headRadius),
         (head.height / 2 * tree.scale.y - headRadius));
 
-
-    var trunkBodyWidth = 20 * tree.scale.x;
-    var trunkBodyHeight = 26 * tree.scale.y;
     trunk.body.setSize(
-        trunkBodyWidth,
-        trunkBodyHeight,
-        Math.round((trunk.width * tree.scale.x - trunkBodyWidth) / 2),
-        28 * tree.scale.y);
+        bodyWidth,
+        bodyHeight,
+        Math.round((trunk.width * tree.scale.x - bodyWidth) / 2),
+        mathRound(28 * tree.scale.y, 2));
 
     return tree;
 }

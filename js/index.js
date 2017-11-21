@@ -166,21 +166,19 @@ function handleGameStarted(data) {
         movableObjects.push(value);
     });
 
-    var tree1 = createTree();
-    tree1.centerX = game.world.width * 0.25;
-    tree1.centerY = game.world.height * 0.33;
+    if (data.trees) {
+        data.trees.sort(function (a, b) {
+            return a.y - b.y;
+        });
 
-    var tree2 = createTree();
-    tree2.centerX = game.world.width * 0.85;
-    tree2.centerY = game.world.height * 0.5;
+        data.trees.forEach(function (value) {
+            var tree = createTree(value.width, value.height);
+            tree.x = value.x - tree.trunk.body.offset.x - (tree.trunk.body.width / 2);
+            tree.y = value.y - tree.trunk.body.offset.y - (tree.trunk.body.height / 2);
 
-    var tree3 = createTree();
-    tree3.centerX = game.world.width * 0.5;
-    tree3.centerY = game.world.height * 0.75;
-
-    trees.push(tree1);
-    trees.push(tree2);
-    trees.push(tree3);
+            trees.push(tree);
+        });
+    }
 
     if (data.playersInfo) {
         data.playersInfo.forEach(function (value) {
@@ -340,6 +338,8 @@ function handleEnemyDisconnected(data) {
     }
 
     enemiesMap.delete(data.id);
+    removeFromArray(movableObjects, enemySprite);
+
     scoresMap.get(data.id).destroy();
     scoresMap.delete(data.id);
 
@@ -477,7 +477,7 @@ function update() {
 
     movableObjects.forEach(function (object) {
         var velocity = object.customVelocity;
-        if (velocity) {
+        if (velocity && object.body) {
             if (velocity.x !== 0) {
                 object.body.x += velocity.x * deltaTime;
             }
@@ -504,8 +504,6 @@ function update() {
     });
 
     trees.forEach(function (tree) {
-        game.physics.arcade.collide(playerSprite, tree.trunk);
-
         tree.mustHide = false;
         for (i = 0; i < players.length; i++) {
             var playerSprite = players[i];
@@ -519,7 +517,6 @@ function update() {
             tree.alpha = 1;
         }
     });
-
 
     if (!mockServer) {
         trees.forEach(function (tree) {
@@ -582,4 +579,14 @@ function removeFromArray(array, element) {
     if (index > -1) {
         array.splice(index, 1);
     }
+}
+
+function mathRound(value, decimalPlaces) {
+    if (decimalPlaces <= 0) {
+        return Math.round(value);
+    }
+
+    var divider = Math.pow(10, Math.round(decimalPlaces));
+
+    return Math.round(value * divider) / divider;
 }

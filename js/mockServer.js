@@ -22,13 +22,40 @@ function mockConnectToGame(message) {
         'width': 1024,
         'height': 768,
         'skin': message.skin,
-        'playerName': message.playerName
+        'playerName': message.playerName,
+        'trees': mockTrees()
     });
 
     mockEnemies();
 
     snowballs.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', mockSnowballOutOfBounds);
     snowballs.setAll('outOfBoundsKill', false);
+}
+
+function mockTrees() {
+    return [
+        {
+            'x': game.world.width * 0.25 - 50,
+            'y': game.world.height * 0.28 - 50,
+            'width': 30,
+            'height': 40,
+            'type': 'leafed'
+        },
+        {
+            'x': game.world.width * 0.5 - 30,
+            'y': game.world.height * 0.7 - 50,
+            'width': 30,
+            'height': 40,
+            'type': 'leafed'
+        },
+        {
+            'x': game.world.width * 0.85 - 10,
+            'y': game.world.height * 0.5 - 50,
+            'width': 30,
+            'height': 40,
+            'type': 'leafed'
+        }
+    ]
 }
 
 function mockThrowBall(message) {
