@@ -172,7 +172,13 @@ function handleGameStarted(data) {
         });
 
         data.trees.forEach(function (value) {
-            var tree = createTree(value.width, value.height);
+            var tree;
+            if (value.type && (value.type === 'pine')) {
+                tree = createPineTree(value.width, value.height);
+            } else {
+                tree = createTree(value.width, value.height);
+            }
+
             tree.x = value.x - tree.trunk.body.offset.x - (tree.trunk.body.width / 2);
             tree.y = value.y - tree.trunk.body.offset.y - (tree.trunk.body.height / 2);
 

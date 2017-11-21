@@ -297,3 +297,56 @@ function createTree(bodyWidth, bodyHeight) {
 
     return tree;
 }
+
+function createPineTree(bodyWidth, bodyHeight) {
+    var tree = game.add.group();
+
+    var head = game.make.sprite(0, 0, 'LPC_Trees', 'snowed_pinetree_head.png');
+    game.physics.enable(head, Phaser.Physics.ARCADE);
+    head.body.immovable = true;
+
+
+    var trunk = game.make.sprite(0, 0, 'LPC_Trees', 'pinetree_trunk.png');
+
+    tree.add(trunk);
+    tree.add(head);
+
+    trunk.centerX = tree.width / 2;
+    head.y -= 36;
+
+    var spriteBodyWidth = 60;
+    var spriteBodyHeight = 26;
+    tree.scale.setTo(
+        mathRound(bodyWidth / spriteBodyWidth, 2),
+        mathRound(bodyHeight / spriteBodyHeight, 2));
+
+    game.physics.enable(trunk, Phaser.Physics.ARCADE);
+    trunk.enableBody = true;
+    trunk.body.immovable = true;
+
+    tree.key = 'tree';
+    tree.trunk = trunk;
+    tree.head = head;
+
+    /*var headWidth = 42 * tree.scale.x;
+    var headHeight = 70 * tree.scale.y;
+    head.body.setSize(
+        headWidth,
+        headHeight,
+        Math.round((head.width * tree.scale.x - headWidth) / 2),
+        Math.round((head.height * tree.scale.y - headHeight) / 2));*/
+
+    var headRadius = (head.width / 2 - 8) * tree.scale.x;
+    head.body.setCircle(
+        headRadius,
+        (head.width / 2 * tree.scale.x - headRadius),
+        (head.height / 2 * tree.scale.y - headRadius - 12));
+
+    trunk.body.setSize(
+        bodyWidth,
+        bodyHeight,
+        Math.round((trunk.width * tree.scale.x - bodyWidth) / 2),
+        mathRound(30 * tree.scale.y, 2));
+
+    return tree;
+}

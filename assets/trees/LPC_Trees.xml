@@ -1,6 +1,7 @@
 <TextureAtlas imagePath="LPC_Trees.png">
     <SubTexture name="full_snow_tree_head.png" x="0" y="0" width="96" height="82"/>
+    <SubTexture name="snowed_pinetree_head.png" x="8" y="316" width="86" height="94"/>
     <SubTexture name="tree_trunk.png" x="229" y="33" width="66" height="74"/>
-    <SubTexture name="pinetree_trunk.png" x="330" y="0" width="110" height="110"/>
+    <SubTexture name="pinetree_trunk.png" x="328" y="33" width="62" height="74"/>
 
 </TextureAtlas>

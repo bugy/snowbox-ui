@@ -37,16 +37,16 @@ function mockTrees() {
         {
             'x': game.world.width * 0.25 - 50,
             'y': game.world.height * 0.28 - 50,
-            'width': 30,
+            'width': 90,
             'height': 40,
-            'type': 'leafed'
+            'type': 'pine'
         },
         {
             'x': game.world.width * 0.5 - 30,
             'y': game.world.height * 0.7 - 50,
-            'width': 30,
+            'width': 90,
             'height': 40,
-            'type': 'leafed'
+            'type': 'pine'
         },
         {
             'x': game.world.width * 0.85 - 10,
