@@ -39,21 +39,21 @@ function mockTrees() {
             'y': game.world.height * 0.28 - 50,
             'width': 90,
             'height': 40,
-            'type': 'pine'
+            'type': 'pinale'
         },
         {
             'x': game.world.width * 0.5 - 30,
             'y': game.world.height * 0.7 - 50,
             'width': 90,
             'height': 40,
-            'type': 'pine'
+            'type': 'pinale'
         },
         {
             'x': game.world.width * 0.85 - 10,
             'y': game.world.height * 0.5 - 50,
             'width': 30,
             'height': 40,
-            'type': 'leafed'
+            'type': 'broadleaf'
         }
     ]
 }

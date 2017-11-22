@@ -176,7 +176,7 @@ function handleGameStarted(data) {
 
         data.trees.forEach(function (value) {
             var tree;
-            if (value.type && (value.type === 'pine')) {
+            if (value.type && (value.type === 'pinale')) {
                 tree = createPineTree(value.width, value.height);
             } else {
                 tree = createTree(value.width, value.height);
