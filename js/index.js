@@ -37,6 +37,10 @@ function preload() {
     game.add.plugin(PhaserInput.Plugin);
     var plugin = game.plugins.add(Phaser.Plugin.AdvancedTiming);
     plugin.mode = 'domText';
+
+    game.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+    game.scale.parentIsWindow = true;
+    game.scale.refresh();
 }
 
 var player;
@@ -127,6 +131,9 @@ function handleGameStarted(data) {
     playerId = data.id;
 
     game.world.setBounds(0, 0, data.width, data.height);
+    game.scale.onSizeChange.add(function () {
+        game.world.setBounds(0, 0, data.width, data.height);
+    });
 
     drawBorder(data.width, data.height);
 
@@ -238,8 +245,13 @@ function createPlayerAmmo(player) {
         }
     });
 
-    ammoGroup.cameraOffset.x = (game.camera.width - ammoGroup.width) + 2;
-    ammoGroup.cameraOffset.y = (game.camera.height - ammoGroup.height) - 16;
+    var repositionAmmo = function () {
+        ammoGroup.cameraOffset.x = (game.camera.width - ammoGroup.width) + 2;
+        ammoGroup.cameraOffset.y = (game.camera.height - ammoGroup.height) - 16;
+    };
+
+    game.scale.onSizeChange.add(repositionAmmo);
+    repositionAmmo();
 }
 
 function keyDown(e) {
