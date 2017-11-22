@@ -194,6 +194,52 @@ function handleGameStarted(data) {
             handleEnemyConnected(value);
         });
     }
+
+    if (data.maxSnowballs) {
+        player.model.maxSnowballs = data.maxSnowballs;
+        player.model.snowballsCount = ko.observable(player.model.maxSnowballs);
+        createPlayerAmmo(player);
+    }
+}
+
+function createPlayerAmmo(player) {
+    var ammoGroup = game.add.group();
+    ammoGroup.fixedToCamera = true;
+
+    var ammoPanel = game.make.sprite(0, 0, 'rpg_ui', 'buttonLong_beige_pressed.png');
+    ammoGroup.add(ammoPanel);
+
+    var ammoArray = [];
+
+    var x = 0;
+    for (var i = 0; i < player.model.maxSnowballs; i++) {
+        var ammo = game.make.sprite(x, 0, 'large_snowball');
+        ammo.centerY = ammoPanel.centerY;
+        ammoGroup.add(ammo);
+        x += ammo.width * 1.4;
+
+        ammoArray.push(ammo);
+    }
+
+    var deltaX = (ammoPanel.width - ammo.right) / 2;
+    ammoArray.forEach(function (ammo) {
+        ammo.x += deltaX;
+    });
+
+    player.model.snowballsCount.subscribe(function () {
+        var count = player.model.snowballsCount();
+        for (var i = 0; i < ammoArray.length; i++) {
+            var ammo = ammoArray[i];
+            if (i >= count) {
+                ammo.alpha = 0.2;
+            } else {
+                ammo.alpha = 1;
+            }
+        }
+    });
+
+    ammoGroup.cameraOffset.x = (game.camera.width - ammoGroup.width) + 2;
+    ammoGroup.cameraOffset.y = (game.camera.height - ammoGroup.height) - 16;
 }
 
 function keyDown(e) {
@@ -422,6 +468,10 @@ function handlePlayerScored(data) {
     labelTween.onComplete.add(function () {
         this.destroy();
     }, deltaLabel);
+}
+
+function handleSnowballCountChanged(data) {
+    player.model.snowballsCount(data.newCount);
 }
 
 function refreshScoreList(newPlayer) {

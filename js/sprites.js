@@ -19,6 +19,14 @@ function sprites_preload() {
     var snowballBitmap = game.make.bitmapData(16, 16);
     drawGradientCircle(8, 8, 8, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', snowballBitmap);
     game.cache.addImage('snowball', null, snowballBitmap.canvas);
+
+    var largeSnowballBitmap = game.make.bitmapData(24, 24);
+    drawGradientCircle(12, 12, 12, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', largeSnowballBitmap);
+    game.cache.addImage('large_snowball', null, largeSnowballBitmap.canvas);
+
+    var smallSnowballBitmap = game.make.bitmapData(8, 8);
+    drawGradientCircle(4, 4, 4, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', smallSnowballBitmap);
+    game.cache.addImage('small_snowball', null, smallSnowballBitmap.canvas);
 }
 
 function drawBorder(fieldWidth, fieldHeight) {

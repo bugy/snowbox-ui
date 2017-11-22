@@ -23,10 +23,12 @@ function mockConnectToGame(message) {
         'height': 768,
         'skin': message.skin,
         'playerName': message.playerName,
+        'maxSnowballs': 5,
         'trees': mockTrees()
     });
 
     mockEnemies();
+    mockSnowballsReload();
 
     snowballs.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', mockSnowballOutOfBounds);
     snowballs.setAll('outOfBoundsKill', false);
@@ -59,6 +61,16 @@ function mockTrees() {
 }
 
 function mockThrowBall(message) {
+    var snowballsCount = player.model.snowballsCount();
+    if (snowballsCount <= 0) {
+        return;
+    }
+
+    dispatchMessage({
+        'type': 'snowballCountChanged',
+        'newCount': snowballsCount - 1
+    });
+
     var angle = Phaser.Math.angleBetween(
         player.centerX,
         player.centerY,
@@ -183,6 +195,19 @@ function mockEnemies() {
             startEnemyLoop();
         }
     }, 2000);
+}
+
+function mockSnowballsReload() {
+    setInterval(function () {
+        var count = Math.max(0, player.model.snowballsCount()) + 1;
+        if (count <= player.model.maxSnowballs) {
+            dispatchMessage({
+                'type': 'snowballCountChanged',
+                'newCount': count
+            });
+        }
+
+    }, 1000);
 }
 
 function startEnemyLoop() {

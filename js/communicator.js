@@ -48,6 +48,9 @@ function dispatchMessage(message) {
     } else if (message.type === 'playerScored') {
         handlePlayerScored(message);
         return;
+    } else if (message.type === 'snowballCountChanged') {
+        handleSnowballCountChanged(message);
+        return;
     }
 }
 
