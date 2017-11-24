@@ -27,6 +27,9 @@ function sprites_preload() {
     var smallSnowballBitmap = game.make.bitmapData(8, 8);
     drawGradientCircle(4, 4, 4, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', smallSnowballBitmap);
     game.cache.addImage('small_snowball', null, smallSnowballBitmap.canvas);
+
+    game.load.image('musicOn', 'assets/musicOn.png');
+    game.load.image('musicOff', 'assets/musicOff.png');
 }
 
 function drawBorder(fieldWidth, fieldHeight) {
@@ -341,14 +344,6 @@ function createPineTree(bodyWidth, bodyHeight) {
     tree.trunk = trunk;
     tree.head = head;
 
-    /*var headWidth = 42 * tree.scale.x;
-    var headHeight = 70 * tree.scale.y;
-    head.body.setSize(
-        headWidth,
-        headHeight,
-        Math.round((head.width * tree.scale.x - headWidth) / 2),
-        Math.round((head.height * tree.scale.y - headHeight) / 2));*/
-
     var headRadius = (head.width / 2 - 8) * tree.scale.x;
     head.body.setCircle(
         headRadius,
@@ -362,4 +357,48 @@ function createPineTree(bodyWidth, bodyHeight) {
         mathRound(30 * tree.scale.y, 2));
 
     return tree;
+}
+
+function createCheckButton(image, imageChecked, callback) {
+    var button = game.make.sprite(0, 0, 'rpg_ui', 'buttonSquare_brown.png');
+    button.anchor.setTo(0, 1);
+
+    var imageSprite = game.make.sprite(0, 0, image);
+    imageSprite.anchor.setTo(0.5, 0.5);
+    button.addChild(imageSprite);
+
+    button._checked = false;
+    Object.defineProperty(button, 'checked', {
+        get: function () {
+            return this._checked;
+        },
+        set: function (value) {
+            this._checked = value;
+            changeCheckedImage();
+        }
+    });
+
+    button.inputEnabled = true;
+
+    function changeCheckedImage() {
+        if (button.checked) {
+            button.frameName = 'buttonSquare_brown_pressed.png';
+            imageSprite.loadTexture(imageChecked);
+            imageSprite.alignInParent(Phaser.CENTER, 0, 0);
+        } else {
+            button.frameName = 'buttonSquare_brown.png';
+            imageSprite.loadTexture(image);
+            imageSprite.alignInParent(Phaser.CENTER, 0, -2);
+        }
+    }
+
+    changeCheckedImage();
+
+    button.events.onInputDown.add(function (source, event) {
+        button.checked = !button.checked;
+
+        callback(button, event, button._checked);
+    }, this);
+
+    return button;
 }

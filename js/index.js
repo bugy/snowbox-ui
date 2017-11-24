@@ -26,12 +26,14 @@ function preload() {
     game.stage.disableVisibilityChange = true;
 
     game.load.image('background', 'assets/snow_tile.jpg');
-    game.load.image('ice_hud', 'assets/ice_hud.png');
     game.load.spritesheet('boy', 'assets/boy.png', 48, 48);
     game.load.spritesheet('girl', 'assets/girl.png', 48, 48);
 
     game.load.image('dialog_9patch', 'assets/controls/panel_blue.png');
     game.load.image('textField_9patch', 'assets/controls/buttonSquare_grey_pressed.png');
+
+    game.load.audio('login_music', 'assets/music/Snowland.mp3');
+    game.load.audio('battle_music', 'assets/music/wintery loop.wav');
 
     sprites_preload();
     helper_preload();
@@ -49,6 +51,8 @@ var player;
 var cursors;
 var snowballs;
 var playerId;
+var loginMusic;
+var battleMusic;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
@@ -65,6 +69,10 @@ function create() {
 
     game.add.tileSprite(-1000, -1000, 4000, 4000, 'background');
 
+    loginMusic = game.add.audio('login_music', 0.4, true);
+    battleMusic = game.add.audio('battle_music', 0, true);
+    loginMusic.play();
+
     connectToServer();
 
     if (window.location.hostname === 'localhost') {
@@ -72,6 +80,23 @@ function create() {
     } else {
         createStartDialog(sendStartGame);
     }
+
+    createMuteButton();
+}
+
+function createMuteButton() {
+    var checkButton = createCheckButton('musicOn', 'musicOff', function (sprite, event, checked) {
+        game.sound.mute = checked;
+        localStorage.setItem('snowbox_muted', checked);
+    });
+
+    var mutedStored = localStorage.getItem('snowbox_muted');
+    checkButton.checked = (mutedStored === true) || (mutedStored === 'true');
+    game.sound.mute = checkButton.checked;
+
+    game.world.add(checkButton);
+    checkButton.alignIn(game.scale.bounds, Phaser.TOP_RIGHT, -16, -16);
+    checkButton.fixedToCamera = true; // TODO change on screen resize
 }
 
 function createPlayerSprite(id, x, y, name, skin, labelColor) {
@@ -209,6 +234,22 @@ function handleGameStarted(data) {
         player.model.snowballsCount = ko.observable(player.model.maxSnowballs);
         createPlayerAmmo(player);
     }
+
+    var musicSwitchDelay = 3000;
+    loginMusic.fadeTo(musicSwitchDelay, 0);
+    setTimeout(function () {
+        loginMusic.destroy();
+
+        battleMusic.play();
+        battleMusic.fadeTo(musicSwitchDelay, 0.4);
+    }, musicSwitchDelay);
+
+
+    game.world.children.forEach(function (child) {
+        if (child.fixedToCamera) {
+            game.world.bringToTop(child);
+        }
+    });
 }
 
 function createPlayerAmmo(player) {
