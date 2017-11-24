@@ -149,14 +149,16 @@ function createStartDialog(callback) {
     var startGameScreen = game.add.group();
     startGameScreen.fixedToCamera = true;
     startGameScreen.inputEnabled = true;
-    startGameScreen.centerX = game.camera.centerX;
-    startGameScreen.centerY = game.camera.centerY;
 
     var graphicOverlay = new Phaser.Graphics(this.game, 0, 0);
     graphicOverlay.beginFill(0x000000, 0.7);
-    graphicOverlay.drawRect(0, 0, window.innerWidth + 50, window.innerHeight + 50);
+    graphicOverlay.drawRect(0, 0, 64, 64);
     graphicOverlay.endFill();
-    var overlay = this.game.add.image(-50, -50, graphicOverlay.generateTexture());
+    var overlay = this.game.add.tileSprite(
+        0, 0,
+        window.screen.width,
+        window.screen.height,
+        graphicOverlay.generateTexture());
 
     var choosePlayerDialog = game.make.sprite(0, 0, 'dialog');
     choosePlayerDialog.centerX = graphicOverlay.width / 2;
@@ -164,16 +166,14 @@ function createStartDialog(callback) {
 
     var textStyle = {font: "18px Arial", fill: "#212140"};
     var playerLabel = game.make.text(0, 0, "Nickname", textStyle);
-    playerLabel.centerX = choosePlayerDialog.centerX;
-    playerLabel.centerY = choosePlayerDialog.centerY - 120;
+    choosePlayerDialog.addChild(playerLabel);
+    playerLabel.alignInParent(Phaser.CENTER, 0, -120);
 
     var nameField = createTextField(playerLabel);
-    nameField.centerX = choosePlayerDialog.centerX;
-    nameField.centerY = playerLabel.centerY + 36;
+    nameField.alignTo(playerLabel, Phaser.BOTTOM_CENTER, 0, 0);
 
     var skinLabel = game.make.text(0, 0, "Select skin", textStyle);
-    skinLabel.centerX = choosePlayerDialog.centerX;
-    skinLabel.centerY = nameField.centerY + 60;
+    skinLabel.alignTo(nameField, Phaser.BOTTOM_CENTER, 0, 28);
 
     var buttons = [];
     var selectedSkin = ko.observable(null);
@@ -187,12 +187,10 @@ function createStartDialog(callback) {
     };
 
     var boyButton = createImageButton('boy', skinSelector);
-    boyButton.centerX = choosePlayerDialog.centerX - boyButton.width;
-    boyButton.centerY = skinLabel.centerY + 40;
+    boyButton.alignTo(skinLabel, Phaser.BOTTOM_CENTER, -boyButton.width, 4);
 
     var girlButton = createImageButton('girl', skinSelector);
-    girlButton.centerX = choosePlayerDialog.centerX + girlButton.width;
-    girlButton.centerY = skinLabel.centerY + 40;
+    girlButton.alignTo(skinLabel, Phaser.BOTTOM_CENTER, +boyButton.width, 4);
 
     var skinButtonsGray = game.add.filter('Gray');
     girlButton.filters = [skinButtonsGray];
@@ -213,9 +211,8 @@ function createStartDialog(callback) {
         startGameScreen.destroy();
         callback(name, selectedSkin());
     });
-
-    startButton.centerX = choosePlayerDialog.centerX;
-    startButton.bottom = choosePlayerDialog.bottom - 24;
+    choosePlayerDialog.addChild(startButton);
+    startButton.alignInParent(Phaser.BOTTOM_CENTER, 0, -24);
 
     var startButtonEnabler = function () {
         var name = nameField.text().trim();
@@ -226,14 +223,22 @@ function createStartDialog(callback) {
     selectedSkin.subscribe(startButtonEnabler);
     nameField.text.subscribe(startButtonEnabler);
 
+    choosePlayerDialog.addChild(skinLabel);
+    choosePlayerDialog.addChild(nameField);
+    choosePlayerDialog.addChild(boyButton);
+    choosePlayerDialog.addChild(girlButton);
+
     startGameScreen.add(overlay);
     startGameScreen.add(choosePlayerDialog);
-    startGameScreen.add(playerLabel);
-    startGameScreen.add(nameField);
-    startGameScreen.add(skinLabel);
-    startGameScreen.add(boyButton);
-    startGameScreen.add(girlButton);
-    startGameScreen.add(startButton);
+    choosePlayerDialog.alignIn(game.scale.bounds, Phaser.CENTER, 0, 0);
+
+    var repositionLogin = function (scaleManager, width, height) {
+        overlay.width = width;
+        overlay.height = height;
+
+        choosePlayerDialog.alignIn(game.scale.bounds, Phaser.CENTER, 0, 0);
+    };
+    game.scale.onSizeChange.add(repositionLogin);
 
     setButtonEnabled(startButton, false);
 }

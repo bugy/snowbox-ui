@@ -13,6 +13,8 @@ Phaser.Sprite.prototype.alignInParent = function (position, offsetX, offsetY) {
     this.parent.scale = s;
 };
 
+Phaser.Button.prototype.alignInParent = Phaser.Sprite.prototype.alignInParent;
+
 var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 'Snowbox', {
     preload: preload,
     create: create,
