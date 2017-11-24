@@ -16,15 +16,18 @@ function mockSend(message) {
 }
 
 function mockConnectToGame(message) {
+    var width = 1024;
+    var height = 768;
+
     dispatchMessage({
         'type': 'gameStarted',
         'id': randomId(),
-        'width': 1024,
-        'height': 768,
+        'width': width,
+        'height': height,
         'skin': message.skin,
         'playerName': message.playerName,
         'maxSnowballs': 5,
-        'trees': mockTrees()
+        'trees': mockTrees(width, height)
     });
 
     mockEnemies();
@@ -34,25 +37,25 @@ function mockConnectToGame(message) {
     snowballs.setAll('outOfBoundsKill', false);
 }
 
-function mockTrees() {
+function mockTrees(width, height) {
     return [
         {
-            'x': game.world.width * 0.25 - 50,
-            'y': game.world.height * 0.28 - 50,
+            'x': width * 0.25,
+            'y': height * 0.28 + 30,
             'width': 90,
             'height': 40,
             'type': 'pinale'
         },
         {
-            'x': game.world.width * 0.5 - 30,
-            'y': game.world.height * 0.7 - 50,
+            'x': width * 0.5 - 30,
+            'y': height * 0.7 + 50,
             'width': 90,
             'height': 40,
             'type': 'pinale'
         },
         {
-            'x': game.world.width * 0.85 - 10,
-            'y': game.world.height * 0.5 - 50,
+            'x': width * 0.85 - 40,
+            'y': height * 0.5 - 50,
             'width': 30,
             'height': 40,
             'type': 'broadleaf'
@@ -126,8 +129,6 @@ function mockMovePlayer(message) {
     }
 
     var angle = directionsToAngle(xDirection, yDirection);
-    var deltaX = Math.cos(angle) * 2;
-    var deltaY = Math.sin(angle) * 2;
 
     dispatchMessage({
         'type': 'playerMoved',
