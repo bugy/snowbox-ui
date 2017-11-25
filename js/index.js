@@ -163,9 +163,7 @@ function handleGameStarted(data) {
         data.skin,
         '#0000d0');
 
-    cursors = game.input.keyboard.createCursorKeys();
-    game.input.keyboard.onDownCallback = keyDown;
-    game.input.keyboard.onUpCallback = keyUp;
+    subscribeMoveButtons();
 
     game.camera.follow(player);
     game.camera.bounds = null;
@@ -249,6 +247,20 @@ function handleGameStarted(data) {
         }
     });
 }
+
+var subscribeMoveButtons = function () {
+    var keys = [
+        Phaser.Keyboard.UP, Phaser.Keyboard.DOWN,
+        Phaser.Keyboard.LEFT, Phaser.Keyboard.RIGHT,
+        Phaser.Keyboard.W, Phaser.Keyboard.A,
+        Phaser.Keyboard.D, Phaser.Keyboard.S];
+
+    for (var i = 0; i < keys.length; i++) {
+        var keyHandler = game.input.keyboard.addKey(keys[i]);
+        keyHandler.onDown.add(moveKeyPressed, this);
+        keyHandler.onUp.add(moveKeyPressed, this);
+    }
+};
 
 function alignToCamera(object, position, offsetX, offsetY) {
     var reposition = function () {
@@ -354,34 +366,6 @@ function createMuteButton() {
     alignToCamera(muteButton, Phaser.TOP_RIGHT, -16, 16);
 }
 
-function keyDown(e) {
-    if (e.repeat) {
-        return;
-    }
-
-    if ((e.keyCode === Phaser.Keyboard.UP)
-        || (e.keyCode === Phaser.Keyboard.DOWN)
-        || (e.keyCode === Phaser.Keyboard.LEFT)
-        || (e.keyCode === Phaser.Keyboard.RIGHT)) {
-        moveKeyPressed();
-        return;
-    }
-}
-
-function keyUp(e) {
-    if (e.repeat) {
-        return;
-    }
-
-    if ((e.keyCode === Phaser.Keyboard.UP)
-        || (e.keyCode === Phaser.Keyboard.DOWN)
-        || (e.keyCode === Phaser.Keyboard.LEFT)
-        || (e.keyCode === Phaser.Keyboard.RIGHT)) {
-        moveKeyPressed();
-        return;
-    }
-}
-
 function animatePlayerMove(sprite, animationName) {
     if (!animationName) {
         if (sprite.animations.currentAnim) {
@@ -398,15 +382,26 @@ function moveKeyPressed() {
     var xDirection = 0;
     var yDirection = 0;
 
-    if (cursors.up.isDown) {
+    var upPressed = game.input.keyboard.isDown(Phaser.Keyboard.UP)
+        || game.input.keyboard.isDown(Phaser.Keyboard.W);
+    var downPressed = game.input.keyboard.isDown(Phaser.Keyboard.DOWN)
+        || game.input.keyboard.isDown(Phaser.Keyboard.S);
+
+    var rightPressed = game.input.keyboard.isDown(Phaser.Keyboard.RIGHT)
+        || game.input.keyboard.isDown(Phaser.Keyboard.D);
+    var leftPressed = game.input.keyboard.isDown(Phaser.Keyboard.LEFT)
+        || game.input.keyboard.isDown(Phaser.Keyboard.A);
+
+
+    if (upPressed) {
         yDirection = -1;
-    } else if (cursors.down.isDown) {
+    } else if (downPressed) {
         yDirection = 1;
     }
 
-    if (cursors.left.isDown) {
+    if (leftPressed) {
         xDirection = -1;
-    } else if (cursors.right.isDown) {
+    } else if (rightPressed) {
         xDirection = 1;
     }
 
@@ -414,13 +409,13 @@ function moveKeyPressed() {
 
     var animationName = null;
 
-    if (cursors.up.isDown) {
+    if (upPressed) {
         animationName = "moveTop";
-    } else if (cursors.down.isDown) {
+    } else if (downPressed) {
         animationName = "moveBottom";
-    } else if (cursors.left.isDown) {
+    } else if (leftPressed) {
         animationName = "moveLeft";
-    } else if (cursors.right.isDown) {
+    } else if (rightPressed) {
         animationName = "moveRight";
     }
 
