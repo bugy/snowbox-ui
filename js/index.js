@@ -84,21 +84,6 @@ function create() {
     createMuteButton();
 }
 
-function createMuteButton() {
-    var checkButton = createCheckButton('musicOn', 'musicOff', function (sprite, event, checked) {
-        game.sound.mute = checked;
-        localStorage.setItem('snowbox_muted', checked);
-    });
-
-    var mutedStored = localStorage.getItem('snowbox_muted');
-    checkButton.checked = (mutedStored === true) || (mutedStored === 'true');
-    game.sound.mute = checkButton.checked;
-
-    game.world.add(checkButton);
-    checkButton.alignIn(game.scale.bounds, Phaser.TOP_RIGHT, -16, -16);
-    checkButton.fixedToCamera = true; // TODO change on screen resize
-}
-
 function createPlayerSprite(id, x, y, name, skin, labelColor) {
     var sprite = game.add.sprite(x, y, skin);
     sprite.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
@@ -181,12 +166,19 @@ function handleGameStarted(data) {
     game.camera.follow(player);
     game.camera.bounds = null;
 
-    game.input.mouse.capture = true;
-    game.input.onDown.add(function () {
+
+    var clickArea = game.add.sprite(0, 0);
+    clickArea.fixedToCamera = true;
+    clickArea.scale.setTo(game.width, game.height);
+    clickArea.inputEnabled = true;
+    clickArea.events.onInputDown.add(function () {
         sendThrowBall(
             game.input.mousePointer.x + game.camera.x,
             game.input.mousePointer.y + game.camera.y);
-    }, this);
+    });
+    game.scale.onSizeChange.add(function (scaleManager, width, height) {
+        clickArea.scale.setTo(width, height);
+    });
 
     snowballs = game.add.group();
     snowballs.enableBody = true;
@@ -241,7 +233,9 @@ function handleGameStarted(data) {
         loginMusic.destroy();
 
         battleMusic.play();
-        battleMusic.fadeTo(musicSwitchDelay, 0.4);
+        this.game.add.tween(battleMusic).to({
+            volume: 0.4
+        }, musicSwitchDelay, Phaser.Easing.Linear.None, true);
     }, musicSwitchDelay);
 
 
@@ -250,6 +244,52 @@ function handleGameStarted(data) {
             game.world.bringToTop(child);
         }
     });
+}
+
+function alignToCamera(object, position, offsetX, offsetY) {
+    var reposition = function () {
+        if (!object.exists) {
+            game.scale.onSizeChange.remove(reposition);
+            return;
+        }
+
+        var y;
+        if ((position === Phaser.TOP_LEFT)
+            || (position === Phaser.TOP_RIGHT)
+            || (position === Phaser.TOP_CENTER)) {
+            y = 0;
+        } else if ((position === Phaser.LEFT_CENTER)
+            || (position === Phaser.RIGHT_CENTER)
+            || (position === Phaser.CENTER)) {
+            y = (game.camera.height - object.height) / 2;
+        } else {
+            y = (game.camera.height - object.height);
+        }
+
+        var x;
+        if ((position === Phaser.TOP_LEFT)
+            || (position === Phaser.LEFT_CENTER)
+            || (position === Phaser.BOTTOM_LEFT)) {
+            x = 0;
+        } else if ((position === Phaser.TOP_CENTER)
+            || (position === Phaser.BOTTOM_CENTER)
+            || (position === Phaser.CENTER)) {
+            x = (game.camera.width - object.width) / 2;
+        } else {
+            x = (game.camera.width - object.width);
+        }
+
+        if (object.anchor) {
+            y += object.height * object.anchor.y;
+            x += object.width * object.anchor.x;
+        }
+
+        object.cameraOffset.x = x + offsetX;
+        object.cameraOffset.y = y + offsetY;
+    };
+
+    game.scale.onSizeChange.add(reposition);
+    reposition();
 }
 
 function createPlayerAmmo(player) {
@@ -288,13 +328,26 @@ function createPlayerAmmo(player) {
         }
     });
 
-    var repositionAmmo = function () {
-        ammoGroup.cameraOffset.x = (game.camera.width - ammoGroup.width) + 2;
-        ammoGroup.cameraOffset.y = (game.camera.height - ammoGroup.height) - 16;
-    };
+    alignToCamera(ammoGroup, Phaser.BOTTOM_RIGHT, 2, -16);
+}
 
-    game.scale.onSizeChange.add(repositionAmmo);
-    repositionAmmo();
+function createMuteButton() {
+    var muteButton = createCheckButton('musicOn', 'musicOff', function (sprite, event, checked) {
+        battleMusic.mute = checked;
+        loginMusic.mute = checked;
+
+        localStorage.setItem('snowbox_muted', checked);
+    });
+
+    var mutedStored = localStorage.getItem('snowbox_muted');
+    muteButton.checked = (mutedStored === true) || (mutedStored === 'true');
+    loginMusic.mute = muteButton.checked;
+    battleMusic.mute = muteButton.checked;
+
+    game.world.add(muteButton);
+    muteButton.fixedToCamera = true;
+
+    alignToCamera(muteButton, Phaser.TOP_RIGHT, -16, 16);
 }
 
 function keyDown(e) {
