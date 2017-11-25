@@ -34,6 +34,7 @@ function preload() {
 
     game.load.audio('login_music', 'assets/music/Snowland.mp3');
     game.load.audio('battle_music', 'assets/music/wintery loop.wav');
+    game.load.audio('snow_run', 'assets/music/snow_run.mp3');
 
     sprites_preload();
     helper_preload();
@@ -53,6 +54,7 @@ var snowballs;
 var playerId;
 var loginMusic;
 var battleMusic;
+var stepsSound;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
@@ -69,9 +71,11 @@ function create() {
 
     game.add.tileSprite(-1000, -1000, 4000, 4000, 'background');
 
-    loginMusic = game.add.audio('login_music', 0.4, true);
+    loginMusic = game.add.audio('login_music', 0.3, true);
     battleMusic = game.add.audio('battle_music', 0, true);
     loginMusic.play();
+
+    stepsSound = game.add.audio('snow_run', 1, true);
 
     connectToServer();
 
@@ -234,7 +238,7 @@ function handleGameStarted(data) {
 
         battleMusic.play();
         this.game.add.tween(battleMusic).to({
-            volume: 0.4
+            volume: 0.3
         }, musicSwitchDelay, Phaser.Easing.Linear.None, true);
     }, musicSwitchDelay);
 
@@ -435,30 +439,34 @@ function startSpriteMovement(sprite, x, y, velocity, angle) {
 function handlePlayerMoved(data) {
     var sprite = getPlayer(data.id);
 
-    if (sprite) {
-        startSpriteMovement(sprite, data.x, data.y, data.velocity, data.angle);
+    if (!sprite) {
+        return;
+    }
 
-        if (sprite !== player) {
-            var animationName = null;
+    startSpriteMovement(sprite, data.x, data.y, data.velocity, data.angle);
 
-            if (data.velocity !== 0) {
-                var angle = -((data.angle + Math.PI) % (2 * Math.PI) - Math.PI);
-                var degrees45 = Math.PI / 4;
-                var degrees135 = degrees45 * 3;
+    if (sprite === player) {
+        stepsSound.play();
+    } else {
+        var animationName = null;
 
-                if ((angle >= degrees45) && (angle <= degrees135)) {
-                    animationName = "moveTop";
-                } else if ((angle <= -degrees45) && (angle >= -degrees135)) {
-                    animationName = "moveBottom";
-                } else if ((angle > degrees135) || (angle <= -degrees45)) {
-                    animationName = "moveLeft";
-                } else {
-                    animationName = "moveRight";
-                }
+        if (data.velocity !== 0) {
+            var angle = -((data.angle + Math.PI) % (2 * Math.PI) - Math.PI);
+            var degrees45 = Math.PI / 4;
+            var degrees135 = degrees45 * 3;
+
+            if ((angle >= degrees45) && (angle <= degrees135)) {
+                animationName = "moveTop";
+            } else if ((angle <= -degrees45) && (angle >= -degrees135)) {
+                animationName = "moveBottom";
+            } else if ((angle > degrees135) || (angle <= -degrees45)) {
+                animationName = "moveLeft";
+            } else {
+                animationName = "moveRight";
             }
-
-            animatePlayerMove(sprite, animationName);
         }
+
+        animatePlayerMove(sprite, animationName);
     }
 }
 
@@ -480,12 +488,16 @@ function getPlayer(id) {
 function handlePlayerStopped(data) {
     var sprite = getPlayer(data.id);
 
-    if (sprite) {
-        stopPlayerSprite(sprite, data.x, data.y);
+    if (!sprite) {
+        return
+    }
 
-        if (sprite !== player) {
-            animatePlayerMove(sprite, null);
-        }
+    stopPlayerSprite(sprite, data.x, data.y);
+
+    if (sprite === player) {
+        stepsSound.stop();
+    } else {
+        animatePlayerMove(sprite, null);
     }
 }
 
