@@ -23,6 +23,8 @@ var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 
 });
 
 function preload() {
+    handleFontloader();
+
     game.stage.disableVisibilityChange = true;
 
     game.load.image('background', 'assets/snow_tile.jpg');
@@ -45,6 +47,11 @@ function preload() {
     game.scale.refresh();
 }
 
+function handleFontloader() {
+    var loaderElement = document.getElementById('fontloader');
+    loaderElement.parentElement.removeChild(loaderElement);
+}
+
 var player;
 var snowballs;
 var snowballSplashes;
@@ -57,7 +64,7 @@ var trees = [];
 var movableObjects = [];
 
 function create() {
-    load9PatchImage('dialog', 'dialog_9patch', 480, 320, 10, 10, 90, 90);
+    load9PatchImage('dialog', 'dialog_9patch', 380, 352, 10, 10, 90, 90);
     load9PatchImage('textField', 'textField_9patch', 160, 40, 5, 5, 40, 40);
     load9PatchImage('squareButton', 'textField_9patch', 48, 48, 5, 5, 40, 40);
 
@@ -616,6 +623,8 @@ function render() {
             game.debug.body(value.trunk);
         });
     */
+
+    // game.debug.spriteBounds(buttonLabel, '#00FF00', false);
 
     game.debug.gameInfo(window.innerWidth - 300, 16);
     game.debug.gameTimeInfo(window.innerWidth - 300, 160);

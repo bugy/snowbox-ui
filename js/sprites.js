@@ -169,17 +169,20 @@ function createStartDialog(callback) {
     choosePlayerDialog.centerX = graphicOverlay.width / 2;
     choosePlayerDialog.centerY = graphicOverlay.height / 2;
 
-    var textStyle = {font: "18px Arial", fill: "#212140"};
+    var textStyle = {
+        font: "26px Snowbox-font", fill: '#D0F0F0',
+        strokeThickness: 2, stroke: '#3080A0'
+    };
     var playerLabel = game.make.text(0, 0, "Nickname", textStyle);
     choosePlayerDialog.addChild(playerLabel);
-    playerLabel.alignInParent(Phaser.CENTER, 0, -120);
+    playerLabel.alignInParent(Phaser.TOP_CENTER, 0, -24);
 
     var nameField = createTextField(playerLabel);
     nameField.textField.domElement.setMax(12);
     nameField.alignTo(playerLabel, Phaser.BOTTOM_CENTER, 0, 0);
 
-    var skinLabel = game.make.text(0, 0, "Select skin", textStyle);
-    skinLabel.alignTo(nameField, Phaser.BOTTOM_CENTER, 0, 28);
+    var skinLabel = game.make.text(0, 0, "Skin", textStyle);
+    skinLabel.alignTo(nameField, Phaser.BOTTOM_CENTER, 0, 16);
 
     var buttons = [];
     var selectedSkin = ko.observable(null);
@@ -253,20 +256,31 @@ function createButton(textStyle, callback) {
     var button = game.make.button(0, 0, 'rpg_ui', callback, this,
         'buttonLong_brown.png', 'buttonLong_brown.png', 'buttonLong_brown_pressed.png');
     button.anchor.setTo(0, 1);
+    var originalHeight = button.height;
+    var pressedHeight = button.height - 4;
 
     var buttonLabel = game.make.text(0, 0, "Start", textStyle);
     button.addChild(buttonLabel);
-    var repositionLabel = function (mouseUp) {
-        if (mouseUp === true) {
-            buttonLabel.alignInParent(Phaser.TOP_CENTER, 0, -10);
-        } else {
-            buttonLabel.alignInParent(Phaser.TOP_CENTER, 0, -14);
+    buttonLabel.centerX = button.width / 2;
+
+    console.log('height=' + button.height);
+    var offsetY = -buttonLabel.height - (pressedHeight - buttonLabel.height) / 2 + 2;
+    var repositionLabel = function () {
+        var buttonHeight = button.height;
+        if ((this.event.type === 'pointerup') && (button.height === pressedHeight)) {
+            buttonHeight = originalHeight;
         }
+
+        if (buttonHeight === originalHeight) {
+            buttonLabel.y = offsetY - 4;
+        } else {
+            buttonLabel.y = offsetY;
+        }
+
     };
     button.onInputDown.add(repositionLabel);
-    button.onInputUp.add(function () {
-        repositionLabel(true);
-    });
+    button.onInputOut.add(repositionLabel);
+    button.onInputUp.add(repositionLabel);
     repositionLabel();
 
     return button;

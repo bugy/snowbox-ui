@@ -1,3 +1,12 @@
+@font-face {
+    font-family: "Snowbox-font";
+    src: url('assets/fonts/ModiusFrigid.ttf') format('truetype');
+}
+
 .ppat-text {
     display: none;
+}
+
+p#fontloader {
+    font-family: Snowbox-font;
 }
