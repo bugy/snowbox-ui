@@ -399,6 +399,10 @@ function handleSnowballChanged(data) {
         game.physics.arcade.velocityFromRotation(
             data.angle, data.velocity * 7.92, snowball.customVelocity
         );
+
+        var distance = Phaser.Math.distance(player.centerX, player.centerY, data.x, data.y);
+        var volume = mathRound(1 - Math.min(distance / 150, 1), 2);
+        playThrow(volume);
     }
 
     snowball.position.set(data.x, data.y);
