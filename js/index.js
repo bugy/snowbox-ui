@@ -32,12 +32,9 @@ function preload() {
     game.load.image('dialog_9patch', 'assets/controls/panel_blue.png');
     game.load.image('textField_9patch', 'assets/controls/buttonSquare_grey_pressed.png');
 
-    game.load.audio('login_music', 'assets/music/Snowland.mp3');
-    game.load.audio('battle_music', 'assets/music/wintery loop.wav');
-    game.load.audio('snow_run', 'assets/music/snow_run.mp3');
-
-    sprites_preload();
-    helper_preload();
+    preloadSprites();
+    preloadSounds();
+    preloadHelper();
 
     game.add.plugin(PhaserInput.Plugin);
     var plugin = game.plugins.add(Phaser.Plugin.AdvancedTiming);
@@ -49,12 +46,9 @@ function preload() {
 }
 
 var player;
-var cursors;
 var snowballs;
+var snowballSplashes;
 var playerId;
-var loginMusic;
-var battleMusic;
-var stepsSound;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
@@ -71,11 +65,7 @@ function create() {
 
     game.add.tileSprite(-1000, -1000, 4000, 4000, 'background');
 
-    loginMusic = game.add.audio('login_music', 0.3, true);
-    battleMusic = game.add.audio('battle_music', 0, true);
-    loginMusic.play();
-
-    stepsSound = game.add.audio('snow_run', 1, true);
+    createSounds();
 
     connectToServer();
 
@@ -88,31 +78,10 @@ function create() {
     createMuteButton();
 }
 
-function createPlayerSprite(id, x, y, name, skin, labelColor) {
-    var sprite = game.add.sprite(x, y, skin);
-    sprite.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
-    sprite.animations.add('moveRight', [3, 7, 11, 15], 12, true);
-    sprite.animations.add('moveTop', [2, 6, 10, 14], 12, true);
-    sprite.animations.add('moveBottom', [0, 4, 8, 12], 12, true);
-
-    game.physics.enable(sprite, Phaser.Physics.ARCADE);
-    sprite.body.collideWorldBounds = true;
-
-    var nameLabel = game.make.text(0, 0, name, {
-        font: "14px Arial",
-        fill: labelColor
-    });
-    sprite.addChild(nameLabel);
-    nameLabel.x = Math.round((sprite.width - nameLabel.width) / 2);
-    nameLabel.y = -12;
-
-    sprite.physicsBodyType = Phaser.Physics.ARCADE;
-    sprite.body.bounce.set(0, 0);
-    var bodyRadius = 12;
-    sprite.body.setCircle(
-        bodyRadius,
-        (sprite.width / 2 - bodyRadius),
-        (sprite.height / 2 - bodyRadius));
+function initPlayer(id, x, y, name, skin, labelColor) {
+    var sprite = createPlayerSprite(id, x, y, name, skin, labelColor);
+    sprite.customVelocity = new Phaser.Point(0, 0);
+    movableObjects.push(sprite);
 
     sprite.model = {
         id: id,
@@ -137,9 +106,6 @@ function createPlayerSprite(id, x, y, name, skin, labelColor) {
         refreshScoreList();
     });
 
-    sprite.customVelocity = new Phaser.Point(0, 0);
-    movableObjects.push(sprite);
-
     return sprite;
 }
 
@@ -155,7 +121,7 @@ function handleGameStarted(data) {
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    player = createPlayerSprite(
+    player = initPlayer(
         data.id,
         game.world.centerX,
         game.world.centerY,
@@ -186,11 +152,19 @@ function handleGameStarted(data) {
     snowballs.enableBody = true;
     snowballs.physicsBodyType = Phaser.Physics.ARCADE;
 
-    snowballs.createMultiple(50, 'snowball');
+    snowballs.createMultiple(200, 'snowball');
     snowballs.setAll('checkWorldBounds', true);
     snowballs.setAll('outOfBoundsKill', true);
     snowballs.setAll('anchor.x', 0.5);
     snowballs.setAll('anchor.y', 0.5);
+
+    snowballSplashes = game.add.group();
+    snowballSplashes.createMultiple(200, 'snowball_splash');
+    snowballSplashes.setAll('scale.x', 0.5);
+    snowballSplashes.setAll('scale.y', 0.5);
+    snowballSplashes.setAll('anchor.x', 0.5);
+    snowballSplashes.setAll('anchor.y', 0.5);
+    snowballSplashes.callAll('animations.add', 'animations', 'explosion');
 
     snowballs.forEach(function (value) {
         value.customVelocity = new Phaser.Point(0, 0);
@@ -229,17 +203,7 @@ function handleGameStarted(data) {
         createPlayerAmmo(player);
     }
 
-    var musicSwitchDelay = 3000;
-    loginMusic.fadeTo(musicSwitchDelay, 0);
-    setTimeout(function () {
-        loginMusic.destroy();
-
-        battleMusic.play();
-        this.game.add.tween(battleMusic).to({
-            volume: 0.3
-        }, musicSwitchDelay, Phaser.Easing.Linear.None, true);
-    }, musicSwitchDelay);
-
+    switchMusic();
 
     game.world.children.forEach(function (child) {
         if (child.fixedToCamera) {
@@ -261,110 +225,6 @@ var subscribeMoveButtons = function () {
         keyHandler.onUp.add(moveKeyPressed, this);
     }
 };
-
-function alignToCamera(object, position, offsetX, offsetY) {
-    var reposition = function () {
-        if (!object.exists) {
-            game.scale.onSizeChange.remove(reposition);
-            return;
-        }
-
-        var y;
-        if ((position === Phaser.TOP_LEFT)
-            || (position === Phaser.TOP_RIGHT)
-            || (position === Phaser.TOP_CENTER)) {
-            y = 0;
-        } else if ((position === Phaser.LEFT_CENTER)
-            || (position === Phaser.RIGHT_CENTER)
-            || (position === Phaser.CENTER)) {
-            y = (game.camera.height - object.height) / 2;
-        } else {
-            y = (game.camera.height - object.height);
-        }
-
-        var x;
-        if ((position === Phaser.TOP_LEFT)
-            || (position === Phaser.LEFT_CENTER)
-            || (position === Phaser.BOTTOM_LEFT)) {
-            x = 0;
-        } else if ((position === Phaser.TOP_CENTER)
-            || (position === Phaser.BOTTOM_CENTER)
-            || (position === Phaser.CENTER)) {
-            x = (game.camera.width - object.width) / 2;
-        } else {
-            x = (game.camera.width - object.width);
-        }
-
-        if (object.anchor) {
-            y += object.height * object.anchor.y;
-            x += object.width * object.anchor.x;
-        }
-
-        object.cameraOffset.x = x + offsetX;
-        object.cameraOffset.y = y + offsetY;
-    };
-
-    game.scale.onSizeChange.add(reposition);
-    reposition();
-}
-
-function createPlayerAmmo(player) {
-    var ammoGroup = game.add.group();
-    ammoGroup.fixedToCamera = true;
-
-    var ammoPanel = game.make.sprite(0, 0, 'rpg_ui', 'buttonLong_beige_pressed.png');
-    ammoGroup.add(ammoPanel);
-
-    var ammoArray = [];
-
-    var x = 0;
-    for (var i = 0; i < player.model.maxSnowballs; i++) {
-        var ammo = game.make.sprite(x, 0, 'large_snowball');
-        ammo.centerY = ammoPanel.centerY;
-        ammoGroup.add(ammo);
-        x += ammo.width * 1.4;
-
-        ammoArray.push(ammo);
-    }
-
-    var deltaX = (ammoPanel.width - ammo.right) / 2;
-    ammoArray.forEach(function (ammo) {
-        ammo.x += deltaX;
-    });
-
-    player.model.snowballsCount.subscribe(function () {
-        var count = player.model.snowballsCount();
-        for (var i = 0; i < ammoArray.length; i++) {
-            var ammo = ammoArray[i];
-            if (i >= count) {
-                ammo.alpha = 0.2;
-            } else {
-                ammo.alpha = 1;
-            }
-        }
-    });
-
-    alignToCamera(ammoGroup, Phaser.BOTTOM_RIGHT, 2, -16);
-}
-
-function createMuteButton() {
-    var muteButton = createCheckButton('musicOn', 'musicOff', function (sprite, event, checked) {
-        battleMusic.mute = checked;
-        loginMusic.mute = checked;
-
-        localStorage.setItem('snowbox_muted', checked);
-    });
-
-    var mutedStored = localStorage.getItem('snowbox_muted');
-    muteButton.checked = (mutedStored === true) || (mutedStored === 'true');
-    loginMusic.mute = muteButton.checked;
-    battleMusic.mute = muteButton.checked;
-
-    game.world.add(muteButton);
-    muteButton.fixedToCamera = true;
-
-    alignToCamera(muteButton, Phaser.TOP_RIGHT, -16, 16);
-}
 
 function animatePlayerMove(sprite, animationName) {
     if (!animationName) {
@@ -441,7 +301,7 @@ function handlePlayerMoved(data) {
     startSpriteMovement(sprite, data.x, data.y, data.velocity, data.angle);
 
     if (sprite === player) {
-        stepsSound.play();
+        soundSteps(true);
     } else {
         var animationName = null;
 
@@ -490,14 +350,14 @@ function handlePlayerStopped(data) {
     stopPlayerSprite(sprite, data.x, data.y);
 
     if (sprite === player) {
-        stepsSound.stop();
+        soundSteps(false);
     } else {
         animatePlayerMove(sprite, null);
     }
 }
 
 function handleEnemyConnected(data) {
-    var enemySprite = createPlayerSprite(data.id, data.x, data.y, data.name, data.skin, '#d00000');
+    var enemySprite = initPlayer(data.id, data.x, data.y, data.name, data.skin, '#d00000');
     enemiesMap.set(data.id, enemySprite);
 }
 
@@ -522,25 +382,20 @@ function handleSnowballChanged(data) {
     if (!snowball) {
         snowball = snowballs.getFirstDead();
         snowballMap.set(data.id, snowball);
-        snowball.reset(0, 0);
+        snowball.reset(data.x, data.y);
     }
 
     if (data.deleted) {
         snowballMap.delete(data.id);
-        snowball.customVelocity.setTo(0, 0);
+        snowball.kill();
 
-        snowball.loadTexture('snowball_splash');
-        snowball.scale.setTo(0.5, 0.5);
-
-        snowball.animations.add('explosion');
-        snowball.animations.play('explosion', 70, false, true);
-
-    } else {
-        if (snowball.texture.key !== 'snowball') {
-            snowball.loadTexture('snowball');
-            snowball.scale.setTo(1, 1);
+        var splash = snowballSplashes.getFirstDead();
+        if (splash) {
+            splash.reset(data.x, data.y);
+            splash.animations.play('explosion', 70, false, true);
         }
 
+    } else {
         game.physics.arcade.velocityFromRotation(
             data.angle, data.velocity * 7.92, snowball.customVelocity
         );

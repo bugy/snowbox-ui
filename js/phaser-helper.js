@@ -1,6 +1,6 @@
 var disabledButtonGray;
 
-function helper_preload() {
+function preloadHelper() {
     game.load.script('disabledButtonGray',
         'https://cdn.rawgit.com/photonstorm/phaser/master/v2/filters/Gray.js');
 }
@@ -94,4 +94,50 @@ function load9PatchImage(destImage, srcImage, width, height, srcX1, srcY1, srcX2
 
 function directionsToAngle(directionX, directionY) {
     return Phaser.Math.angleBetween(0, 0, directionX, directionY);
+}
+
+function alignToCamera(object, position, offsetX, offsetY) {
+    var reposition = function () {
+        if (!object.exists) {
+            game.scale.onSizeChange.remove(reposition);
+            return;
+        }
+
+        var y;
+        if ((position === Phaser.TOP_LEFT)
+            || (position === Phaser.TOP_RIGHT)
+            || (position === Phaser.TOP_CENTER)) {
+            y = 0;
+        } else if ((position === Phaser.LEFT_CENTER)
+            || (position === Phaser.RIGHT_CENTER)
+            || (position === Phaser.CENTER)) {
+            y = (game.camera.height - object.height) / 2;
+        } else {
+            y = (game.camera.height - object.height);
+        }
+
+        var x;
+        if ((position === Phaser.TOP_LEFT)
+            || (position === Phaser.LEFT_CENTER)
+            || (position === Phaser.BOTTOM_LEFT)) {
+            x = 0;
+        } else if ((position === Phaser.TOP_CENTER)
+            || (position === Phaser.BOTTOM_CENTER)
+            || (position === Phaser.CENTER)) {
+            x = (game.camera.width - object.width) / 2;
+        } else {
+            x = (game.camera.width - object.width);
+        }
+
+        if (object.anchor) {
+            y += object.height * object.anchor.y;
+            x += object.width * object.anchor.x;
+        }
+
+        object.cameraOffset.x = x + offsetX;
+        object.cameraOffset.y = y + offsetY;
+    };
+
+    game.scale.onSizeChange.add(reposition);
+    reposition();
 }

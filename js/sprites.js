@@ -1,4 +1,4 @@
-function sprites_preload() {
+function preloadSprites() {
     game.load.image('fence_tile_horizontal', 'assets/fence_tile_horizontal.png');
     game.load.image('fence_tile_vertical_upper', 'assets/fence_tile_vertical_upper.png');
     game.load.image('fence_tile_vertical_middle', 'assets/fence_tile_vertical_middle.png');
@@ -401,4 +401,90 @@ function createCheckButton(image, imageChecked, callback) {
     }, this);
 
     return button;
+}
+
+function createPlayerSprite(id, x, y, name, skin, labelColor) {
+    var sprite = game.add.sprite(x, y, skin);
+    sprite.animations.add('moveLeft', [1, 5, 9, 13], 12, true);
+    sprite.animations.add('moveRight', [3, 7, 11, 15], 12, true);
+    sprite.animations.add('moveTop', [2, 6, 10, 14], 12, true);
+    sprite.animations.add('moveBottom', [0, 4, 8, 12], 12, true);
+
+    game.physics.enable(sprite, Phaser.Physics.ARCADE);
+    sprite.body.collideWorldBounds = true;
+
+    var nameLabel = game.make.text(0, 0, name, {
+        font: "14px Arial",
+        fill: labelColor
+    });
+    sprite.addChild(nameLabel);
+    nameLabel.x = Math.round((sprite.width - nameLabel.width) / 2);
+    nameLabel.y = -12;
+
+    sprite.physicsBodyType = Phaser.Physics.ARCADE;
+    sprite.body.bounce.set(0, 0);
+    var bodyRadius = 12;
+    sprite.body.setCircle(
+        bodyRadius,
+        (sprite.width / 2 - bodyRadius),
+        (sprite.height / 2 - bodyRadius));
+
+    return sprite;
+}
+
+
+function createPlayerAmmo(player) {
+    var ammoGroup = game.add.group();
+    ammoGroup.fixedToCamera = true;
+
+    var ammoPanel = game.make.sprite(0, 0, 'rpg_ui', 'buttonLong_beige_pressed.png');
+    ammoGroup.add(ammoPanel);
+
+    var ammoArray = [];
+
+    var x = 0;
+    for (var i = 0; i < player.model.maxSnowballs; i++) {
+        var ammo = game.make.sprite(x, 0, 'large_snowball');
+        ammo.centerY = ammoPanel.centerY;
+        ammoGroup.add(ammo);
+        x += ammo.width * 1.4;
+
+        ammoArray.push(ammo);
+    }
+
+    var deltaX = (ammoPanel.width - ammo.right) / 2;
+    ammoArray.forEach(function (ammo) {
+        ammo.x += deltaX;
+    });
+
+    player.model.snowballsCount.subscribe(function () {
+        var count = player.model.snowballsCount();
+        for (var i = 0; i < ammoArray.length; i++) {
+            var ammo = ammoArray[i];
+            if (i >= count) {
+                ammo.alpha = 0.2;
+            } else {
+                ammo.alpha = 1;
+            }
+        }
+    });
+
+    alignToCamera(ammoGroup, Phaser.BOTTOM_RIGHT, 2, -16);
+}
+
+function createMuteButton() {
+    var muteButton = createCheckButton('musicOn', 'musicOff', function (sprite, event, checked) {
+        muteMusic(checked);
+
+        localStorage.setItem('snowbox_muted', checked);
+    });
+
+    var mutedStored = localStorage.getItem('snowbox_muted');
+    muteButton.checked = (mutedStored === true) || (mutedStored === 'true');
+    muteMusic(muteButton.checked);
+
+    game.world.add(muteButton);
+    muteButton.fixedToCamera = true;
+
+    alignToCamera(muteButton, Phaser.TOP_RIGHT, -16, 16);
 }
