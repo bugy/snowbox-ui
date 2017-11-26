@@ -23,7 +23,7 @@ var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 
 });
 
 function preload() {
-    loadFonts(['Snowbox-titleFont', 'Snowbox-normalFont']);
+    loadFonts(['Snowbox-normalFont']);
 
     game.stage.disableVisibilityChange = true;
 

@@ -170,19 +170,19 @@ function createStartDialog(callback) {
     choosePlayerDialog.centerY = graphicOverlay.height / 2;
 
     var textStyle = {
-        font: "26px Snowbox-titleFont", fill: '#D0F0F0',
+        font: "24px Snowbox-normalFont", fill: '#D0F0F0',
         strokeThickness: 2, stroke: '#3080A0'
     };
     var playerLabel = game.make.text(0, 0, "Nickname", textStyle);
     choosePlayerDialog.addChild(playerLabel);
-    playerLabel.alignInParent(Phaser.TOP_CENTER, 0, -24);
+    playerLabel.alignInParent(Phaser.TOP_CENTER, 0, -28);
 
     var nameField = createTextField(playerLabel);
     nameField.textField.domElement.setMax(12);
     nameField.alignTo(playerLabel, Phaser.BOTTOM_CENTER, 0, 0);
 
     var skinLabel = game.make.text(0, 0, "Skin", textStyle);
-    skinLabel.alignTo(nameField, Phaser.BOTTOM_CENTER, 0, 16);
+    skinLabel.alignTo(nameField, Phaser.BOTTOM_CENTER, 0, 24);
 
     var buttons = [];
     var selectedSkin = ko.observable(null);

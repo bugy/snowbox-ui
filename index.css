@@ -1,9 +1,4 @@
 @font-face {
-    font-family: "Snowbox-titleFont";
-    src: url('assets/fonts/ModiusFrigid.ttf') format('truetype');
-}
-
-@font-face {
     font-family: "Snowbox-normalFont";
     src: url('assets/fonts/KBAStitchInTime.ttf') format('truetype');
 }
