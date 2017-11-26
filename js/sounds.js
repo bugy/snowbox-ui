@@ -4,8 +4,8 @@ var stepsSound;
 var throwSound;
 
 function preloadSounds() {
-    game.load.audio('login_music', 'assets/music/Snowland.mp3');
-    game.load.audio('battle_music', 'assets/music/wintery loop.wav');
+    game.load.audio('login_music', 'assets/music/snowland_cut_looped.mp3');
+    game.load.audio('battle_music', 'assets/music/wintery loop_cut.mp3');
     game.load.audio('snow_run', 'assets/music/snow_run.mp3');
     game.load.audio('hit_ball', 'assets/music/hit_ball.mp3');
     game.load.audio('throw_ball', 'assets/music/throw_ball.mp3');
