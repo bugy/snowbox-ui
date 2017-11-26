@@ -121,6 +121,8 @@ function createTextField() {
         result.text(input.text.text);
     }, 250);
 
+    result.textField = input;
+
     return result;
 }
 
@@ -173,6 +175,7 @@ function createStartDialog(callback) {
     playerLabel.alignInParent(Phaser.CENTER, 0, -120);
 
     var nameField = createTextField(playerLabel);
+    nameField.textField.domElement.setMax(12);
     nameField.alignTo(playerLabel, Phaser.BOTTOM_CENTER, 0, 0);
 
     var skinLabel = game.make.text(0, 0, "Select skin", textStyle);
@@ -205,7 +208,7 @@ function createStartDialog(callback) {
     var startButton = createButton(textStyle, function () {
         setButtonEnabled(startButton, false);
 
-        var name = nameField.text().trim();
+        var name = nameField.textField.text.text.trim();
 
         if (!selectedSkin() || (name.length <= 0)) {
             return;
