@@ -82,7 +82,12 @@ function mockThrowBall(message) {
 
     var id = randomId();
 
-    mockedSnowballs.set(id, {'id': id, 'owner': playerId});
+    mockedSnowballs.set(id, {
+        'id': id,
+        'owner': playerId,
+        'startX': player.centerX,
+        'startY': player.centerY
+    });
 
     dispatchMessage({
         'type': 'snowballChanged',
@@ -321,9 +326,17 @@ function mockSnowballHitPlayer(targetPlayer, snowball) {
         return;
     }
 
-    var ownerId = mockedSnowballs.get(snowballId).owner;
+    var snowballModel = mockedSnowballs.get(snowballId);
+    var ownerId = snowballModel.owner;
     var targetId = targetPlayer.model.id;
-    var scoreDelta = 10;
+
+    var distance = Phaser.Math.distance(
+        snowballModel.startX, snowballModel.startY,
+        targetPlayer.centerX, targetPlayer.centerY);
+    var minDistance = 100;
+    var maxDistance = 400 - minDistance;
+    var distancePercent = (distance - minDistance) / maxDistance;
+    var scoreDelta = Math.round(Math.max(0, Math.min(distancePercent, 1)) * 10);
 
     dispatchMessage({
         'type': 'snowballChanged',

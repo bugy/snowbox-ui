@@ -430,7 +430,14 @@ function handlePlayerScored(data) {
         return;
     }
 
+    if ((data.playerId === playerId) && (data.scoreDelta === 0)) {
+        return;
+    }
+
     var deltaText = data.scoreDelta > 0 ? '+' + data.scoreDelta : data.scoreDelta;
+    if (data.scoreDelta === 0) {
+        deltaText = 'too close';
+    }
 
     var deltaLabel = game.add.text(0, 0, deltaText, {
         font: '16px Arial',
