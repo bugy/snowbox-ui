@@ -7,7 +7,7 @@ function preloadSounds() {
     game.load.audio('login_music', 'assets/music/Snowland.mp3');
     game.load.audio('battle_music', 'assets/music/wintery loop.wav');
     game.load.audio('snow_run', 'assets/music/snow_run.mp3');
-    game.load.audio('hit_ball', 'assets/music/hit_ball.wav');
+    game.load.audio('hit_ball', 'assets/music/hit_ball.mp3');
     game.load.audio('throw_ball', 'assets/music/throw_ball.mp3');
 }
 
@@ -18,6 +18,7 @@ function createSounds() {
 
     stepsSound = game.add.audio('snow_run', 1, true);
     throwSound = game.add.audio('throw_ball', 0.7, false);
+    hitSound = game.add.audio('hit_ball', 1, false);
 }
 
 function muteMusic(muted) {
@@ -36,6 +37,11 @@ function soundSteps(enabled) {
 function playThrow(volume) {
     throwSound.play();
     throwSound.volume = volume * 0.5;
+}
+
+function playSnowballSplash(volume) {
+    hitSound.play();
+    hitSound.volume = volume;
 }
 
 function switchMusic() {

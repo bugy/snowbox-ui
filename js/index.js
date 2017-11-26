@@ -376,6 +376,11 @@ function handleEnemyDisconnected(data) {
     refreshScoreList();
 }
 
+function distanceToVolume(x1, y1, x2, y2, maxDistance) {
+    var distance = Phaser.Math.distance(x1, y1, x2, y2);
+    return mathRound(1 - Math.min(distance / maxDistance, 1), 2);
+}
+
 function handleSnowballChanged(data) {
     var snowball = snowballMap.get(data.id);
 
@@ -395,13 +400,15 @@ function handleSnowballChanged(data) {
             splash.animations.play('explosion', 70, false, true);
         }
 
+        var volume = distanceToVolume(player.centerX, player.centerY, data.x, data.y, 600);
+        playSnowballSplash(volume)
+
     } else {
         game.physics.arcade.velocityFromRotation(
             data.angle, data.velocity * 7.92, snowball.customVelocity
         );
 
-        var distance = Phaser.Math.distance(player.centerX, player.centerY, data.x, data.y);
-        var volume = mathRound(1 - Math.min(distance / 150, 1), 2);
+        var volume = distanceToVolume(player.centerX, player.centerY, data.x, data.y, 150);
         playThrow(volume);
     }
 
