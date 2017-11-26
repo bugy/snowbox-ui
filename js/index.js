@@ -23,16 +23,13 @@ var game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.WEBGL, 
 });
 
 function preload() {
-    handleFontloader();
+    loadFonts(['Snowbox-titleFont', 'Snowbox-normalFont']);
 
     game.stage.disableVisibilityChange = true;
 
     game.load.image('background', 'assets/snow_tile.jpg');
     game.load.spritesheet('boy', 'assets/boy.png', 48, 48);
     game.load.spritesheet('girl', 'assets/girl.png', 48, 48);
-
-    game.load.image('dialog_9patch', 'assets/controls/panel_blue.png');
-    game.load.image('textField_9patch', 'assets/controls/buttonSquare_grey_pressed.png');
 
     preloadSprites();
     preloadSounds();
@@ -47,15 +44,26 @@ function preload() {
     game.scale.refresh();
 }
 
-function handleFontloader() {
+function loadFonts(fonts) {
     var loaderElement = document.getElementById('fontloader');
-    loaderElement.parentElement.removeChild(loaderElement);
+    loaderElement.style.fontFamily = fonts[0];
+
+    setTimeout(function () {
+        if (fonts.length <= 1) {
+            loaderElement.parentElement.removeChild(loaderElement);
+        } else {
+            loadFonts(fonts.splice(1));
+        }
+    }, 0);
 }
 
 var player;
 var snowballs;
 var snowballSplashes;
 var playerId;
+var muteButton;
+var hudPanel;
+var scoreEllipsis;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
@@ -64,9 +72,10 @@ var trees = [];
 var movableObjects = [];
 
 function create() {
-    load9PatchImage('dialog', 'dialog_9patch', 380, 352, 10, 10, 90, 90);
-    load9PatchImage('textField', 'textField_9patch', 160, 40, 5, 5, 40, 40);
-    load9PatchImage('squareButton', 'textField_9patch', 48, 48, 5, 5, 40, 40);
+    load9PatchImage('dialog', 'rpg_ui', 380, 352, 10, 10, 90, 90, 'panel_blue.png');
+    load9PatchImage('textField', 'rpg_ui', 160, 40, 5, 5, 40, 40, 'buttonSquare_grey_pressed.png');
+    load9PatchImage('squareButton', 'rpg_ui', 48, 48, 5, 5, 40, 40, 'buttonSquare_grey_pressed.png');
+    load9PatchImage('hudPanel', 'rpg_ui', 160, 256, 5, 5, 40, 40, 'panel_beigeLight.png');
 
     game.renderer.renderSession.roundPixels = true;
 
@@ -82,7 +91,14 @@ function create() {
         createStartDialog(sendStartGame);
     }
 
-    createMuteButton();
+    muteButton = createMuteButton();
+}
+
+function createScoreLabel(text, labelColor) {
+    return game.add.text(24, 0, text, {
+        font: "12px Snowbox-normalFont",
+        fill: labelColor
+    });
 }
 
 function initPlayer(id, x, y, name, skin, labelColor) {
@@ -96,14 +112,8 @@ function initPlayer(id, x, y, name, skin, labelColor) {
         score: ko.observable(0)
     };
 
-    var scoreLabel = game.add.text(0, 16, name + ': ' + sprite.model.score(), {
-        font: "18px Arial",
-        fill: labelColor,
-        stroke: '#000000',
-        strokeThickness: 1
-    });
-    scoreLabel.x = 16;
-    scoreLabel.fixedToCamera = true;
+    var scoreLabel = createScoreLabel(name + ': ' + sprite.model.score(), labelColor);
+    hudPanel.add(scoreLabel);
     scoresMap.set(id, scoreLabel);
     refreshScoreList(sprite);
 
@@ -118,6 +128,8 @@ function initPlayer(id, x, y, name, skin, labelColor) {
 
 function handleGameStarted(data) {
     playerId = data.id;
+
+    hudPanel = createHudPanel();
 
     game.world.setBounds(0, 0, data.width, data.height);
     game.scale.onSizeChange.add(function () {
@@ -140,20 +152,6 @@ function handleGameStarted(data) {
 
     game.camera.follow(player);
     game.camera.bounds = null;
-
-
-    var clickArea = game.add.sprite(0, 0);
-    clickArea.fixedToCamera = true;
-    clickArea.scale.setTo(game.width, game.height);
-    clickArea.inputEnabled = true;
-    clickArea.events.onInputDown.add(function () {
-        sendThrowBall(
-            game.input.mousePointer.x + game.camera.x,
-            game.input.mousePointer.y + game.camera.y);
-    });
-    game.scale.onSizeChange.add(function (scaleManager, width, height) {
-        clickArea.scale.setTo(width, height);
-    });
 
     snowballs = game.add.group();
     snowballs.enableBody = true;
@@ -212,11 +210,48 @@ function handleGameStarted(data) {
 
     switchMusic();
 
-    game.world.children.forEach(function (child) {
+    var worldChildren = game.world.children.slice();
+    worldChildren.forEach(function (child) {
         if (child.fixedToCamera) {
             game.world.bringToTop(child);
         }
     });
+
+    var clickArea = game.add.sprite(0, 0);
+    clickArea.fixedToCamera = true;
+    clickArea.scale.setTo(game.width, game.height);
+    clickArea.inputEnabled = true;
+    clickArea.events.onInputDown.add(function () {
+        sendThrowBall(
+            game.input.mousePointer.x + game.camera.x,
+            game.input.mousePointer.y + game.camera.y);
+    });
+    game.scale.onSizeChange.add(function (scaleManager, width, height) {
+        clickArea.scale.setTo(width, height);
+    });
+    clickArea.sendToBack();
+}
+
+function createHudPanel() {
+    var result = game.add.group();
+    result.fixedToCamera = true;
+
+    var hudPanel = game.add.sprite(0, 0, 'hudPanel');
+    hudPanel.alpha = 0.7;
+
+    scoreEllipsis = createScoreLabel('.....', '#906000');
+    scoreEllipsis.parent.remove(scoreEllipsis);
+    result.add(scoreEllipsis);
+
+    result.add(hudPanel);
+    alignToCamera(result, Phaser.TOP_RIGHT, 8, -8);
+
+    alignToCamera(
+        muteButton, Phaser.TOP_RIGHT,
+        -8 - hudPanel.width,
+        8);
+
+    return result;
 }
 
 var subscribeMoveButtons = function () {
@@ -447,11 +482,8 @@ function handlePlayerScored(data) {
     }
 
     var deltaLabel = game.add.text(0, 0, deltaText, {
-        font: '16px Arial',
-        fontWeight: 'bold',
-        fill: (data.scoreDelta > 0) ? '#00A000' : '#C00000',
-        stroke: '#404040',
-        strokeThickness: 1
+        font: '14px Snowbox-normalFont',
+        fill: (data.scoreDelta > 0) ? '#00A000' : '#C00000'
     });
 
     deltaLabel.centerX = player.centerX;
@@ -482,13 +514,50 @@ function refreshScoreList(newPlayer) {
         return b.model.score() - a.model.score();
     });
 
-    var y = 16;
-    sortedPlayers.forEach(function (value) {
-        var label = scoresMap.get(value.model.id);
-        label.cameraOffset.y = y;
+    if (sortedPlayers.length <= 0) {
+        return;
+    }
 
-        y += label.height + 8;
+    var padding = 16;
+
+    var randomLabel = scoresMap.values().next().value;
+    var singleLabelHeight = randomLabel.height + 8;
+    var maxRows = Math.min(Math.floor((hudPanel.height - padding) / singleLabelHeight));
+    if (maxRows > sortedPlayers.length) {
+        maxRows = sortedPlayers.length;
+    }
+
+    scoresMap.forEach(function (label) {
+        label.visible = false;
     });
+    if (scoreEllipsis) {
+        scoreEllipsis.visible = false;
+    }
+
+    var yOffset = hudPanel.height - padding;
+
+    var labels = [];
+    sortedPlayers.slice(0, maxRows).forEach(function (value) {
+        var label = scoresMap.get(value.model.id);
+        labels.push(label);
+    });
+
+    if (sortedPlayers.indexOf(player) > (maxRows - 1)) {
+        labels[maxRows - 2] = scoreEllipsis;
+        labels[maxRows - 1] = scoresMap.get(playerId);
+    }
+
+    labels.reverse().forEach(function (label) {
+        label.bottom = yOffset;
+
+        yOffset -= singleLabelHeight;
+
+        label.visible = true;
+    });
+
+    var labelHeights = Math.min(maxRows * singleLabelHeight + padding * 2, hudPanel.height);
+
+    alignToCamera(hudPanel, Phaser.TOP_RIGHT, 8, -8 + (labelHeights - hudPanel.height));
 }
 
 function updatePlayerZIndex(value) {
@@ -626,8 +695,8 @@ function render() {
 
     // game.debug.spriteBounds(buttonLabel, '#00FF00', false);
 
-    game.debug.gameInfo(window.innerWidth - 300, 16);
-    game.debug.gameTimeInfo(window.innerWidth - 300, 160);
+    game.debug.gameInfo(16, 16);
+    game.debug.gameTimeInfo(16, 160);
 }
 
 function removeFromArray(array, element) {

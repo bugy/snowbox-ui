@@ -1,6 +1,11 @@
 @font-face {
-    font-family: "Snowbox-font";
+    font-family: "Snowbox-titleFont";
     src: url('assets/fonts/ModiusFrigid.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: "Snowbox-normalFont";
+    src: url('assets/fonts/KBAStitchInTime.ttf') format('truetype');
 }
 
 .ppat-text {
@@ -8,5 +13,6 @@
 }
 
 p#fontloader {
-    font-family: Snowbox-font;
+    position: absolute;
+    left: -100px;
 }

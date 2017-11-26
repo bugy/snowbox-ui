@@ -41,10 +41,13 @@ function drawGradientCircle(x, y, radius, colorIn, colorOut, bitmap) {
     bitmap.circle(x, y, radius, gradient);
 }
 
-function load9PatchImage(destImage, srcImage, width, height, srcX1, srcY1, srcX2, srcY2) {
+function load9PatchImage(destImage, srcImage, width, height, srcX1, srcY1, srcX2, srcY2, frame) {
     var bitmap = game.make.bitmapData(width, height);
 
-    var patchImage = game.cache.getImage(srcImage);
+    var patchImage = game.make.sprite(0, 0, srcImage);
+    if (frame) {
+        patchImage.frameName = frame;
+    }
 
     var bottomHeight = patchImage.height - srcY2;
     var rightWidth = patchImage.width - srcX2;
@@ -97,6 +100,11 @@ function directionsToAngle(directionX, directionY) {
 }
 
 function alignToCamera(object, position, offsetX, offsetY) {
+    if (object.cameraReposition) {
+        game.scale.onSizeChange.add(object.cameraReposition);
+        object.cameraReposition = null;
+    }
+
     var reposition = function () {
         if (!object.exists) {
             game.scale.onSizeChange.remove(reposition);
@@ -140,4 +148,6 @@ function alignToCamera(object, position, offsetX, offsetY) {
 
     game.scale.onSizeChange.add(reposition);
     reposition();
+
+    object.cameraReposition = reposition;
 }

@@ -170,7 +170,7 @@ function createStartDialog(callback) {
     choosePlayerDialog.centerY = graphicOverlay.height / 2;
 
     var textStyle = {
-        font: "26px Snowbox-font", fill: '#D0F0F0',
+        font: "26px Snowbox-titleFont", fill: '#D0F0F0',
         strokeThickness: 2, stroke: '#3080A0'
     };
     var playerLabel = game.make.text(0, 0, "Nickname", textStyle);
@@ -263,7 +263,6 @@ function createButton(textStyle, callback) {
     button.addChild(buttonLabel);
     buttonLabel.centerX = button.width / 2;
 
-    console.log('height=' + button.height);
     var offsetY = -buttonLabel.height - (pressedHeight - buttonLabel.height) / 2 + 2;
     var repositionLabel = function () {
         var buttonHeight = button.height;
@@ -398,6 +397,11 @@ function createCheckButton(image, imageChecked, callback) {
     button.inputEnabled = true;
 
     function changeCheckedImage() {
+        var oldScale;
+        if (button.scale) {
+            oldScale = new Phaser.Point(button.scale.x, button.scale.y);
+        }
+
         if (button.checked) {
             button.frameName = 'buttonSquare_brown_pressed.png';
             imageSprite.loadTexture(imageChecked);
@@ -407,6 +411,8 @@ function createCheckButton(image, imageChecked, callback) {
             imageSprite.loadTexture(image);
             imageSprite.alignInParent(Phaser.CENTER, 0, -2);
         }
+
+        button.scale = oldScale;
     }
 
     changeCheckedImage();
@@ -431,12 +437,12 @@ function createPlayerSprite(id, x, y, name, skin, labelColor) {
     sprite.body.collideWorldBounds = true;
 
     var nameLabel = game.make.text(0, 0, name, {
-        font: "14px Arial",
+        font: "12px Snowbox-normalFont",
         fill: labelColor
     });
     sprite.addChild(nameLabel);
     nameLabel.x = Math.round((sprite.width - nameLabel.width) / 2);
-    nameLabel.y = -12;
+    nameLabel.y = -8;
 
     sprite.physicsBodyType = Phaser.Physics.ARCADE;
     sprite.body.bounce.set(0, 0);
@@ -501,7 +507,10 @@ function createMuteButton() {
     muteMusic(muteButton.checked);
 
     game.world.add(muteButton);
-    muteButton.fixedToCamera = true;
+    muteButton.scale.setTo(0.75, 0.75);
 
+    muteButton.fixedToCamera = true;
     alignToCamera(muteButton, Phaser.TOP_RIGHT, -16, 16);
+
+    return muteButton;
 }
