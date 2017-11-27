@@ -12,11 +12,11 @@ function preloadSounds() {
 }
 
 function createSounds() {
-    loginMusic = game.add.audio('login_music', 0.3, true);
+    loginMusic = game.add.audio('login_music', 0.1, true);
     battleMusic = game.add.audio('battle_music', 0, true);
     loginMusic.play();
 
-    stepsSound = game.add.audio('snow_run', 1, true);
+    stepsSound = game.add.audio('snow_run', 0.05, true);
     throwSound = game.add.audio('throw_ball', 0.7, false);
     hitSound = game.add.audio('hit_ball', 1, false);
 }
