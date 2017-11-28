@@ -28,8 +28,14 @@ function preloadSprites() {
     drawGradientCircle(4, 4, 4, 'rgb(230, 230, 255)', 'rgb(100, 100, 130)', smallSnowballBitmap);
     game.cache.addImage('small_snowball', null, smallSnowballBitmap.canvas);
 
-    game.load.image('musicOn', 'assets/musicOn.png');
-    game.load.image('musicOff', 'assets/musicOff.png');
+    game.load.image('musicOn', 'assets/controls/musicOn.png');
+    game.load.image('musicOff', 'assets/controls/musicOff.png');
+    game.load.image('audioOn', 'assets/controls/audioOn.png');
+    game.load.image('audioOff', 'assets/controls/audioOff.png');
+    game.load.image('settings', 'assets/controls/gear.png');
+    game.load.image('cross', 'assets/controls/cross.png');
+
+    game.load.image('slider_line', 'assets/controls/slider_line.png');
 }
 
 function drawBorder(fieldWidth, fieldHeight) {
@@ -126,7 +132,7 @@ function createTextField() {
     return result;
 }
 
-function createImageButton(image, callback) {
+function createImageRadioButton(image, callback) {
     var background = game.make.sprite(0, 0, 'squareButton');
     var sprite = game.make.sprite(0, 0, image);
 
@@ -195,10 +201,10 @@ function createStartDialog(callback) {
         selectedSkin(source.key);
     };
 
-    var boyButton = createImageButton('boy', skinSelector);
+    var boyButton = createImageRadioButton('boy', skinSelector);
     boyButton.alignTo(skinLabel, Phaser.BOTTOM_CENTER, -boyButton.width, 4);
 
-    var girlButton = createImageButton('girl', skinSelector);
+    var girlButton = createImageRadioButton('girl', skinSelector);
     girlButton.alignTo(skinLabel, Phaser.BOTTOM_CENTER, +boyButton.width, 4);
 
     var skinButtonsGray = game.add.filter('Gray');
@@ -256,33 +262,64 @@ function createButton(textStyle, callback) {
     var button = game.make.button(0, 0, 'rpg_ui', callback, this,
         'buttonLong_brown.png', 'buttonLong_brown.png', 'buttonLong_brown_pressed.png');
     button.anchor.setTo(0, 1);
-    var originalHeight = button.height;
-    var pressedHeight = button.height - 4;
 
     var buttonLabel = game.make.text(0, 0, "Start", textStyle);
-    button.addChild(buttonLabel);
-    buttonLabel.centerX = button.width / 2;
+    _addButtonChild(button, buttonLabel, 0, 2);
 
-    var offsetY = -buttonLabel.height - (pressedHeight - buttonLabel.height) / 2 + 2;
-    var repositionLabel = function () {
-        var buttonHeight = button.height;
-        if ((this.event.type === 'pointerup') && (button.height === pressedHeight)) {
-            buttonHeight = originalHeight;
+    return button;
+}
+
+function createImageButton(imageName, callback) {
+    var button = game.make.button(0, 0, 'rpg_ui', callback, this,
+        'buttonSquare_brown.png', 'buttonSquare_brown.png', 'buttonSquare_brown_pressed.png');
+    button.anchor.setTo(0, 1);
+    button.scale.setTo(0.75, 0.75);
+
+    var imageSprite = game.make.sprite(0, 0, imageName);
+    _addButtonChild(button, imageSprite);
+
+    return button;
+}
+
+function _addButtonChild(button, child, offsetX, offsetY) {
+    offsetX = offsetX || 0;
+    offsetY = offsetY || 0;
+
+    var buttonWidth;
+    var originalHeight;
+    var heightScale = 1;
+    if (button.scale) {
+        buttonWidth = button.width / button.scale.x;
+        originalHeight = button.height / button.scale.y;
+        heightScale = button.scale.y;
+    } else {
+        buttonWidth = button.width;
+        originalHeight = button.height;
+    }
+    var elevation = 4;
+    var pressedHeight = originalHeight - elevation;
+
+    button.addChild(child);
+    child.centerX = buttonWidth / 2 + offsetX;
+
+    var fullOffsetY = -child.height - (pressedHeight - child.height) / 2 + offsetY;
+    var repositionChild = function () {
+        var currentHeight = button.height / heightScale;
+        if ((this.event.type === 'pointerup') && (currentHeight === pressedHeight)) {
+            currentHeight = originalHeight;
         }
 
-        if (buttonHeight === originalHeight) {
-            buttonLabel.y = offsetY - 4;
+        if (currentHeight === originalHeight) {
+            child.y = fullOffsetY - elevation;
         } else {
-            buttonLabel.y = offsetY;
+            child.y = fullOffsetY;
         }
 
     };
-    button.onInputDown.add(repositionLabel);
-    button.onInputOut.add(repositionLabel);
-    button.onInputUp.add(repositionLabel);
-    repositionLabel();
-
-    return button;
+    button.onInputDown.add(repositionChild);
+    button.onInputOut.add(repositionChild);
+    button.onInputUp.add(repositionChild);
+    repositionChild();
 }
 
 function createTree(bodyWidth, bodyHeight) {
@@ -495,22 +532,139 @@ function createPlayerAmmo(player) {
     alignToCamera(ammoGroup, Phaser.BOTTOM_RIGHT, 2, -16);
 }
 
-function createMuteButton() {
+function createMuteMusicButton() {
     var muteButton = createCheckButton('musicOn', 'musicOff', function (sprite, event, checked) {
         muteMusic(checked);
 
-        localStorage.setItem('snowbox_muted', checked);
+        saveMusicMuted(checked);
     });
 
-    var mutedStored = localStorage.getItem('snowbox_muted');
-    muteButton.checked = (mutedStored === true) || (mutedStored === 'true');
-    muteMusic(muteButton.checked);
+    muteButton.checked = isMusicMuted();
 
-    game.world.add(muteButton);
     muteButton.scale.setTo(0.75, 0.75);
 
-    muteButton.fixedToCamera = true;
-    alignToCamera(muteButton, Phaser.TOP_RIGHT, -16, 16);
+    return muteButton;
+}
+
+function createMuteSoundsButton() {
+    var muteButton = createCheckButton('audioOn', 'audioOff', function (sprite, event, checked) {
+        muteSounds(checked);
+
+        saveSoundMuted(checked);
+    });
+
+    muteButton.checked = isSoundMuted();
+
+    muteButton.scale.setTo(0.75, 0.75);
 
     return muteButton;
+}
+
+function createSlider() {
+    var result = game.add.group();
+    result.percent = ko.observable(0);
+
+    var sliderLine = game.make.sprite(0, 0, 'slider_line');
+    sliderLine.width = 96;
+
+    var thumb = game.make.sprite(0, 0, 'rpg_ui', 'buttonRound_brown.png');
+    thumb.scale.setTo(0.5, 0.5);
+    thumb.inputEnabled = true;
+    thumb.input.useHandCursor = true;
+    thumb.input.enableDrag(true);
+    thumb.input.boundsRect = new Phaser.Rectangle(0, 0, sliderLine.width, thumb.height);
+    var maxX = thumb.input.boundsRect.width - thumb.width;
+    thumb.events.onDragUpdate.add(function () {
+        result.percent(mathRound(thumb.x / maxX, 2));
+    });
+
+    result.percent.subscribe(function () {
+        if (thumb.input.isDragged) {
+            return;
+        }
+
+        thumb.x = result.percent() * maxX;
+    });
+
+    result.add(sliderLine);
+    result.add(thumb);
+
+    sliderLine.alignIn(result, Phaser.CENTER, 0, 0);
+
+    return result;
+}
+
+
+function initSettings() {
+    settingsButton = createImageButton('settings', function () {
+        settingsPanel.visible = true;
+        game.world.bringToTop(settingsPanel);
+
+        alignToCamera(settingsPanel, Phaser.TOP_RIGHT, -8, 8);
+    });
+    game.world.add(settingsButton);
+    settingsButton.fixedToCamera = true;
+    alignToCamera(settingsButton, Phaser.TOP_RIGHT, -16, 16);
+
+    var settingsPanel = game.add.group();
+    settingsPanel.x = 0;
+    settingsPanel.y = 0;
+    settingsButton.panel = settingsPanel;
+
+    var background = game.add.sprite(0, 0, 'dialog');
+    background.width = 256;
+    background.height = 192;
+    settingsPanel.addChild(background);
+
+    var textStyle = {
+        font: "16px Snowbox-normalFont", fill: '#D0F0F0',
+        strokeThickness: 2, stroke: '#3080A0'
+    };
+
+    var musicLabel = game.make.text(0, 0, "Music", textStyle);
+    settingsPanel.addChild(musicLabel);
+    musicLabel.alignInParent(Phaser.TOP_CENTER, 0, -24);
+
+    var musicSlider = createSlider();
+    settingsPanel.addChild(musicSlider);
+    musicSlider.percent.subscribe(function () {
+        changeMusicVolume(musicSlider.percent());
+        saveMusicVolume(musicSlider.percent());
+    });
+    musicSlider.alignTo(musicLabel, Phaser.BOTTOM_CENTER, -musicSlider.width / 4, 4);
+    musicSlider.percent(getMusicVolume());
+
+    var muteMusicButton = createMuteMusicButton();
+    settingsPanel.addChild(muteMusicButton);
+    muteMusicButton.centerY = musicSlider.centerY;
+    muteMusicButton.x = musicSlider.right + 16;
+
+    var soundsLabel = game.make.text(0, 0, "Sounds", textStyle);
+    settingsPanel.addChild(soundsLabel);
+    soundsLabel.alignTo(musicLabel, Phaser.BOTTOM_CENTER, 0, muteMusicButton.height + 24);
+
+    var soundsSlider = createSlider();
+    settingsPanel.addChild(soundsSlider);
+    soundsSlider.percent.subscribe(function () {
+        changeSoundsVolume(soundsSlider.percent());
+        saveSoundsVolume(soundsSlider.percent());
+    });
+    soundsSlider.alignTo(soundsLabel, Phaser.BOTTOM_CENTER, -soundsSlider.width / 4, 4);
+    soundsSlider.percent(getSoundsVolume());
+
+    var muteSoundsButton = createMuteSoundsButton();
+    settingsPanel.addChild(muteSoundsButton);
+    muteSoundsButton.centerY = soundsSlider.centerY;
+    muteSoundsButton.x = soundsSlider.right + 16;
+
+    var button = game.make.button(0, 0, 'cross', function () {
+        settingsPanel.visible = false;
+    }, this);
+    button.scale.setTo(0.2, 0.2);
+    button.tint = 0x505058;
+    settingsPanel.addChild(button);
+    button.alignInParent(Phaser.TOP_RIGHT, -8, -8);
+
+    settingsPanel.fixedToCamera = true;
+    settingsPanel.visible = false;
 }

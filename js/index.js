@@ -7,8 +7,18 @@ Phaser.Sprite.prototype.alignInParent = function (position, offsetX, offsetY) {
     this.parent.scale.setTo(1);
     this.alignIn(this.parent, position, offsetX, offsetY);
 
-    this.left -= this.parent.left + (this.parent.width * this.parent.anchor.x);
-    this.top -= this.parent.top + (this.parent.height * this.parent.anchor.y);
+    var anchorX;
+    var anchorY;
+    if (this.parent.anchor) {
+        anchorX = this.parent.anchor.x;
+        anchorY = this.parent.anchor.y;
+    } else {
+        anchorX = 0;
+        anchorY = 0;
+    }
+
+    this.left -= this.parent.left + (this.parent.width * anchorX);
+    this.top -= this.parent.top + (this.parent.height * anchorY);
 
     this.parent.scale = s;
 };
@@ -61,7 +71,7 @@ var player;
 var snowballs;
 var snowballSplashes;
 var playerId;
-var muteButton;
+var settingsButton;
 var hudPanel;
 var scoreEllipsis;
 
@@ -91,7 +101,7 @@ function create() {
         createStartDialog(sendStartGame);
     }
 
-    muteButton = createMuteButton();
+    initSettings();
 }
 
 function createScoreLabel(text, labelColor) {
@@ -246,8 +256,10 @@ function createHudPanel() {
     result.add(hudPanel);
     alignToCamera(result, Phaser.TOP_RIGHT, 8, -8);
 
+    game.world.bringToTop(settingsButton);
+    game.world.bringToTop(settingsButton.panel);
     alignToCamera(
-        muteButton, Phaser.TOP_RIGHT,
+        settingsButton, Phaser.TOP_RIGHT,
         -8 - hudPanel.width,
         8);
 
@@ -697,6 +709,56 @@ function render() {
 
     game.debug.gameInfo(16, 16);
     game.debug.gameTimeInfo(16, 160);
+}
+
+function isMusicMuted() {
+    var mutedStored = localStorage.getItem('snowbox_music_muted');
+    return (mutedStored === true) || (mutedStored === 'true');
+}
+
+function saveMusicMuted(muted) {
+    localStorage.setItem('snowbox_music_muted', muted);
+}
+
+function getMusicVolume() {
+    var volumeStored = localStorage.getItem('snowbox_music_volume');
+
+    var volume = parseFloat(volumeStored);
+
+    if (isNaN(volume)) {
+        return 1;
+    }
+
+    return Math.max(0, Math.min(1, volume));
+}
+
+function saveMusicVolume(volume) {
+    localStorage.setItem('snowbox_music_volume', volume);
+}
+
+function isSoundMuted() {
+    var mutedStored = localStorage.getItem('snowbox_sounds_muted');
+    return (mutedStored === true) || (mutedStored === 'true');
+}
+
+function saveSoundMuted(muted) {
+    localStorage.setItem('snowbox_audio_muted', muted);
+}
+
+function getSoundsVolume() {
+    var volumeStored = localStorage.getItem('snowbox_sound_volume');
+
+    var volume = parseFloat(volumeStored);
+
+    if (isNaN(volume)) {
+        return 1;
+    }
+
+    return Math.max(0, Math.min(1, volume));
+}
+
+function saveSoundsVolume(volume) {
+    localStorage.setItem('snowbox_sound_volume', volume);
 }
 
 function removeFromArray(array, element) {

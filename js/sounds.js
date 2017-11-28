@@ -2,6 +2,19 @@ var loginMusic;
 var battleMusic;
 var stepsSound;
 var throwSound;
+var hitSound;
+
+var MAX_MUSIC_VOLUME = 0.4;
+var musicVolume = MAX_MUSIC_VOLUME;
+
+var MAX_STEPS_VOLUME = 0.2;
+var stepsVolume = MAX_STEPS_VOLUME;
+
+var MAX_THROW_VOLUME = 0.7;
+var throwVolume = MAX_THROW_VOLUME;
+
+var MAX_HIT_VOLUME = 1;
+var hitVolume = MAX_HIT_VOLUME;
 
 function preloadSounds() {
     game.load.audio('login_music', 'assets/music/snowland_cut_looped.mp3');
@@ -12,13 +25,19 @@ function preloadSounds() {
 }
 
 function createSounds() {
-    loginMusic = game.add.audio('login_music', 0.1, true);
+    loginMusic = game.add.audio('login_music', musicVolume, true);
     battleMusic = game.add.audio('battle_music', 0, true);
     loginMusic.play();
 
-    stepsSound = game.add.audio('snow_run', 0.05, true);
+    stepsSound = game.add.audio('snow_run', 0.2, true);
     throwSound = game.add.audio('throw_ball', 0.7, false);
     hitSound = game.add.audio('hit_ball', 1, false);
+
+    changeMusicVolume(getMusicVolume());
+    muteMusic(isMusicMuted());
+
+    changeSoundsVolume(getSoundsVolume());
+    muteSounds(isSoundMuted());
 }
 
 function muteMusic(muted) {
@@ -26,9 +45,35 @@ function muteMusic(muted) {
     loginMusic.mute = muted;
 }
 
+function changeMusicVolume(volume) {
+    musicVolume = volume * MAX_MUSIC_VOLUME;
+
+    if (battleMusic.isPlaying) {
+        battleMusic.volume = musicVolume;
+    }
+
+    loginMusic.volume = musicVolume;
+}
+
+function changeSoundsVolume(volume) {
+    hitVolume = volume * MAX_HIT_VOLUME;
+    throwVolume = volume * MAX_THROW_VOLUME;
+    stepsVolume = volume * MAX_STEPS_VOLUME;
+
+    stepsSound.volume = stepsVolume;
+}
+
+function muteSounds(muted) {
+    stepsSound.mute = muted;
+    throwSound.mute = muted;
+    hitSound.mute = muted;
+}
+
 function soundSteps(enabled) {
     if (enabled) {
-        stepsSound.play();
+        if (!stepsSound.isPlaying) {
+            stepsSound.play();
+        }
     } else {
         stepsSound.stop();
     }
@@ -36,12 +81,12 @@ function soundSteps(enabled) {
 
 function playThrow(volume) {
     throwSound.play();
-    throwSound.volume = volume * 0.5;
+    throwSound.volume = volume * throwVolume;
 }
 
 function playSnowballSplash(volume) {
     hitSound.play();
-    hitSound.volume = volume;
+    hitSound.volume = volume * hitVolume;
 }
 
 function switchMusic() {
@@ -52,7 +97,11 @@ function switchMusic() {
 
         battleMusic.play();
         this.game.add.tween(battleMusic).to({
-            volume: 0.3
+            volume: musicVolume
         }, musicSwitchDelay, Phaser.Easing.Linear.None, true);
     }, musicSwitchDelay);
+}
+
+function getMusicVolume() {
+
 }
