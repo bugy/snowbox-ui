@@ -82,7 +82,7 @@ var trees = [];
 var movableObjects = [];
 
 function create() {
-    load9PatchImage('dialog', 'rpg_ui', 380, 352, 10, 10, 90, 90, 'panel_blue.png');
+    load9PatchImage('dialog', 'rpg_ui', 360, 336, 10, 10, 90, 90, 'panel_blue.png');
     load9PatchImage('textField', 'rpg_ui', 160, 40, 5, 5, 40, 40, 'buttonSquare_grey_pressed.png');
     load9PatchImage('squareButton', 'rpg_ui', 48, 48, 5, 5, 40, 40, 'buttonSquare_grey_pressed.png');
     load9PatchImage('hudPanel', 'rpg_ui', 160, 256, 5, 5, 40, 40, 'panel_beigeLight.png');
