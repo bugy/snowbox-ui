@@ -305,7 +305,9 @@ function _addButtonChild(button, child, offsetX, offsetY) {
     var fullOffsetY = -child.height - (pressedHeight - child.height) / 2 + offsetY;
     var repositionChild = function () {
         var currentHeight = button.height / heightScale;
-        if ((this.event.type === 'pointerup') && (currentHeight === pressedHeight)) {
+        if (this.event
+            && (this.event.type === 'pointerup')
+            && (currentHeight === pressedHeight)) {
             currentHeight = originalHeight;
         }
 
