@@ -201,8 +201,8 @@ function handleGameStarted(data) {
                 tree = createTree(value.width, value.height);
             }
 
-            tree.x = value.x - tree.trunk.body.offset.x - (tree.trunk.body.width / 2);
-            tree.y = value.y - tree.trunk.body.offset.y - (tree.trunk.body.height / 2);
+            tree.x = value.x - value.width / 2 - tree.trunk.body.offset.x - tree.trunk.x * tree.scale.x;
+            tree.y = value.y - value.height / 2 - tree.trunk.body.offset.y - tree.trunk.y * tree.scale.y;
 
             trees.push(tree);
         });

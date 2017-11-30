@@ -338,7 +338,7 @@ function createTree(bodyWidth, bodyHeight) {
     tree.add(head);
 
     trunk.centerX = tree.width / 2;
-    head.y -= 44;
+    trunk.y += 44;
 
     var spriteBodyWidth = 20;
     var spriteBodyHeight = 26;
@@ -383,7 +383,7 @@ function createPineTree(bodyWidth, bodyHeight) {
     tree.add(head);
 
     trunk.centerX = tree.width / 2;
-    head.y -= 36;
+    trunk.y += 36;
 
     var spriteBodyWidth = 60;
     var spriteBodyHeight = 26;
