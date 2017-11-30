@@ -105,7 +105,7 @@ function create() {
 }
 
 function createScoreLabel(text, labelColor) {
-    return game.add.text(24, 0, text, {
+    return game.add.text(16, 0, text, {
         font: "12px Snowbox-normalFont",
         fill: labelColor
     });
