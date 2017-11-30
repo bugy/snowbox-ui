@@ -172,6 +172,8 @@ function handleGameStarted(data) {
     snowballs.setAll('outOfBoundsKill', true);
     snowballs.setAll('anchor.x', 0.5);
     snowballs.setAll('anchor.y', 0.5);
+    var snowballWidth = snowballs.children[0].width;
+    snowballs.callAll('body.setCircle', 'body', snowballWidth / 2, 0, 0);
 
     snowballSplashes = game.add.group();
     snowballSplashes.createMultiple(200, 'snowball_splash');
@@ -692,11 +694,13 @@ function render() {
     /*
             enemiesMap.forEach(function (value) {
                 game.debug.body(value);
-            });
+            }); */
 
-            snowballMap.forEach(function (value) {
-                game.debug.body(value);
-            });*/
+    /*
+        snowballMap.forEach(function (value) {
+            game.debug.body(value);
+        });
+    */
 
     /*
         trees.forEach(function (value) {
