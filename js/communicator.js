@@ -3,7 +3,7 @@ var movementTimer = null;
 var socket;
 
 function connectToServer() {
-    socket = new WebSocket('ws://selim.co:8080/api/movement');
+    socket = new WebSocket('ws://' + window.location.hostname + ':8080/api/movement');
 
     socket.addEventListener("message", function (rawMessage) {
         var message = JSON.parse(rawMessage.data);
