@@ -94,7 +94,7 @@ function mockThrowBall(message) {
         'id': id,
         'x': player.centerX,
         'y': player.centerY,
-        'velocity': 90,
+        'velocity': 720,
         'angle': angle
     });
 }
@@ -141,7 +141,7 @@ function mockMovePlayer(message) {
         'x': player.centerX,
         'y': player.centerY,
         'angle': angle,
-        'velocity': 15
+        'velocity': 120
     });
 
     var newDirectionX = xDirection;
@@ -187,7 +187,7 @@ function mockMovePlayer(message) {
                     'x': boundedX || player.centerX,
                     'y': boundedY || player.centerY,
                     'angle': angle,
-                    'velocity': 15
+                    'velocity': 120
                 });
             }
         }
@@ -280,7 +280,7 @@ function startEnemyLoop() {
                     'x': enemiesMap.get(id).centerX,
                     'y': enemiesMap.get(id).centerY,
                     'angle': angle,
-                    'velocity': 15
+                    'velocity': 120
                 });
             }
         }

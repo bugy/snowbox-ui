@@ -344,7 +344,7 @@ function startSpriteMovement(sprite, x, y, velocity, angle) {
         y - sprite.height / 2);
 
     game.physics.arcade.velocityFromRotation(
-        angle, velocity * 7.92, sprite.customVelocity);
+        angle, velocity, sprite.customVelocity);
 }
 
 function handlePlayerMoved(data) {
@@ -461,7 +461,7 @@ function handleSnowballChanged(data) {
 
     } else {
         game.physics.arcade.velocityFromRotation(
-            data.angle, data.velocity * 7.92, snowball.customVelocity
+            data.angle, data.velocity, snowball.customVelocity
         );
 
         var volume = distanceToVolume(player.centerX, player.centerY, data.x, data.y, 150);
