@@ -3,6 +3,12 @@ var movementTimer = null;
 var socket;
 
 function connectToServer() {
+    var hash = window.location.hash;
+    if (hash && (hash.toLowerCase().indexOf('mock') >= 0)) {
+        setTimeout(startMock, 10);
+        return;
+    }
+
     socket = new WebSocket('ws://' + window.location.hostname + ':8080/api/movement');
 
     socket.addEventListener("message", function (rawMessage) {
