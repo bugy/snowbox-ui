@@ -134,6 +134,8 @@ function initPlayer(id, x, y, name, skin, labelColor) {
         refreshScoreList();
     });
 
+    stopPlayerSprite(sprite, x, y);
+
     return sprite;
 }
 
