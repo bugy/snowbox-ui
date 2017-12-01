@@ -28,7 +28,9 @@ function startMock() {
 }
 
 function dispatchMessage(message) {
-    console.log('message=', message);
+	if (window.location.hostname === 'localhost') {
+		console.log('message=', message);
+	}
 
     if (message.type === 'playerMoved') {
         handlePlayerMoved(message);

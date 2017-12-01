@@ -673,6 +673,9 @@ function destroySnowballOnCollide(target, snowball) {
 }
 
 function render() {
+	if (window.location.hostname !== 'localhost') {
+		return;
+	}
     /*    var i = 0;
         enemiesMap.forEach(function (value, key) {
             game.debug.bodyInfo(value, 32, 32 + i * 112);
