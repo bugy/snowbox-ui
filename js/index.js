@@ -74,6 +74,7 @@ var playerId;
 var settingsButton;
 var hudPanel;
 var scoreEllipsis;
+var gameStarted = false;
 
 var snowballMap = new Map();
 var enemiesMap = new Map();
@@ -137,6 +138,8 @@ function initPlayer(id, x, y, name, skin, labelColor) {
 }
 
 function handleGameStarted(data) {
+    gameStarted = true;
+
     playerId = data.id;
 
     hudPanel = createHudPanel();
@@ -413,6 +416,10 @@ function handlePlayerStopped(data) {
 }
 
 function handleEnemyConnected(data) {
+    if (!gameStarted) {
+        return;
+    }
+
     var enemySprite = initPlayer(data.id, data.x, data.y, data.name, data.skin, '#d00000');
     enemiesMap.set(data.id, enemySprite);
 }
