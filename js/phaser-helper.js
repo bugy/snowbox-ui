@@ -2,7 +2,7 @@ var disabledButtonGray;
 
 function preloadHelper() {
     game.load.script('disabledButtonGray',
-        'https://cdn.rawgit.com/photonstorm/phaser/master/v2/filters/Gray.js');
+        'http://cdn.rawgit.com/photonstorm/phaser-ce/release/v2.9.3/filters/Gray.js');
 }
 
 function setButtonEnabled(button, enabled) {
