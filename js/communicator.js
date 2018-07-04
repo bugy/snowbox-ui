@@ -9,7 +9,8 @@ function connectToServer() {
         return;
     }
 
-    socket = new WebSocket('ws://' + window.location.hostname + ':8080/api/movement');
+    var protocol = location.protocol === 'https:' ? 'wss' : 'ws'; 
+    socket = new WebSocket(protocol + '://' + window.location.hostname + ':' + window.location.port + window.location.pathname + '/api/movement');
 
     socket.addEventListener("message", function (rawMessage) {
         var message = JSON.parse(rawMessage.data);
